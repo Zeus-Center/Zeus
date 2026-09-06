@@ -1,0 +1,28 @@
+# Cloudflare Worker — Telegram webhook proxy mỏng (phương án A)
+# Zeus/Hermes là "bộ não"; Worker chỉ forward update về gateway.
+
+name = "zeus-telegram-proxy"
+main = "src/index.js"
+compatibility_date = "2025-05-01"
+
+# (tùy chọn) Workers Logs
+# [observability]
+# enabled = true
+
+[vars]
+# Path Telegram sẽ POST tới. Phải KHỚP với phần path của TELEGRAM_WEBHOOK_URL
+# bạn đặt bên Hermes (mặc định /telegram).
+WEBHOOK_PATH = "/telegram"
+
+# ── SECRETS ──────────────────────────────────────────────────────────────
+# KHÔNG ghi giá trị thật vào file này. Đặt qua CLI trước khi deploy:
+#
+#   wrangler secret put WEBHOOK_SECRET
+#       # Giá trị PHẢI GIỐNG HỆT TELEGRAM_WEBHOOK_SECRET của Hermes.
+#       # Tạo bằng: openssl rand -hex 32
+#
+#   wrangler secret put UPSTREAM_URL
+#       # URL đầy đủ tới webhook server của Hermes, kể cả path, ví dụ:
+#       # https://xxxx.trycloudflare.com/telegram
+#
+# Sau đó: wrangler deploy

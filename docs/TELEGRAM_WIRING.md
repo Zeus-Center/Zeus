@@ -55,19 +55,24 @@ Telegram không cho phép 2 tiến trình cùng `getUpdates` một token, và kh
 `setWebhook` thì `getUpdates` (polling) bị vô hiệu. Vi phạm → **409 xen kẽ =
 đúng triệu chứng "lúc gọi được lúc không".**
 
-Ba cách kết nối hợp lệ (chọn MỘT):
+Ba cách kết nối hợp lệ (chọn MỘT). **ĐÃ CHỐT: phương án A — Zeus/Hermes làm
+bộ não, Worker chỉ là proxy mỏng.** Code Worker nằm ở `worker/telegram-proxy/`.
 
-**A. Worker = webhook proxy (edge) → forward về Hermes gateway (khuyến nghị nếu cần Worker):**
+**A. Worker = webhook proxy (edge) → forward về Hermes gateway ✅ (đã chọn):**
 ```text
 Telegram ──POST──▶ Cloudflare Worker (https://<worker>.workers.dev/telegram)
-                        │ forward nguyên vẹn (giữ header X-Telegram-Bot-Api-Secret-Token)
+                        │ 1) kiểm tra header X-Telegram-Bot-Api-Secret-Token (fail-closed 401)
+                        │ 2) forward nguyên vẹn body + header secret
                         ▼
-              Hermes gateway webhook server (0.0.0.0:8443, qua tunnel/Cloudflare Tunnel)
+              Hermes gateway webhook server (0.0.0.0:8443/telegram, qua tunnel)
 ```
 - `.env` gateway: `TELEGRAM_WEBHOOK_URL=https://<worker>.workers.dev/telegram`,
   `TELEGRAM_WEBHOOK_SECRET=<cùng secret>`, `TELEGRAM_WEBHOOK_PORT=8443`.
-- Worker phải **chuyển tiếp, không tự xử lý**: giữ nguyên body + header secret;
-  KHÔNG gọi `getUpdates`, KHÔNG gọi `setWebhook` riêng.
+- Worker **chuyển tiếp, không tự xử lý**: giữ nguyên body + header secret;
+  KHÔNG gọi `getUpdates`, KHÔNG gọi `setWebhook`, KHÔNG giữ bot token hay key model.
+- Secret của Worker gồm đúng 2 giá trị (nạp qua `wrangler secret put`):
+  `WEBHOOK_SECRET` (= `TELEGRAM_WEBHOOK_SECRET` của gateway) và `UPSTREAM_URL`
+  (URL đầy đủ tới webhook server gateway, kể cả path `/telegram`).
 
 **B. Worker tự xử lý toàn bộ (webhook handler + gọi model):** bỏ phần Telegram
 của Hermes, Worker làm hết. Đơn giản nhưng mất toàn bộ tính năng Hermes
@@ -78,9 +83,42 @@ luôn bật (VPS Ubuntu). Khi chuyển từ webhook→polling phải **xóa webh
 "Webhook Info → Delete webhook" trong Cloudflare Dashboard nếu bạn từng đặt, hoặc
 gọi `deleteWebhook`) — nếu không bot sẽ không nhận update qua polling.
 
+### 2.1 Deploy Worker proxy (phương án A)
+
+```bash
+cd worker/telegram-proxy
+npx wrangler login                                  # lần đầu
+npx wrangler secret put WEBHOOK_SECRET              # = TELEGRAM_WEBHOOK_SECRET (openssl rand -hex 32)
+npx wrangler secret put UPSTREAM_URL                # = https://<tunnel>.trycloudflare.com/telegram
+npx wrangler deploy
+```
+
+Worker lắng nghe path `WEBHOOK_PATH` (mặc định `/telegram`); `GET /` và
+`GET /health` trả JSON để uptime-monitor. POST tới `/telegram` được kiểm tra
+secret trước khi forward; upstream không tới được → trả `502` (thay vì giả `200 OK`).
+
+Thay Worker cũ `cool-unit-a53f`: deploy code này đè lên (hoặc tạo Worker mới rồi
+xóa cái cũ) và **xóa toàn bộ secret cũ** trong dashboard — token bot cũ + Gemini
+key cũ đã rò rỉ phải coi là compromised và revoke ở nơi cấp.
+
+### 2.2 Đường hầm Worker → gateway
+
+Hermes webhook server lắng nghe `0.0.0.0:8443`. Cần một đường HTTPS công khai để
+Worker forward vào (chọn một):
+
+| Cách | Lệnh | Ghi chú |
+| --- | --- | --- |
+| Cloudflare Tunnel | `cloudflared tunnel --url http://localhost:8443` (named tunnel + public hostname) | URL ổn định, khuyến nghị |
+| Quick Tunnel | `cloudflared tunnel --url http://localhost:8443` | URL `trycloudflare.com` đổi mỗi lần chạy → phải cập nhật `UPSTREAM_URL` |
+| VPS public | mở port 8443 + TLS/domain | tự quản firewall |
+
+`UPSTREAM_URL` phải là **URL đầy đủ kể cả path** và path đó phải khớp với
+`url_path` mà Hermes lấy từ `TELEGRAM_WEBHOOK_URL` (xem 1.1): ví dụ
+`https://hermes-tel.example.com/telegram`.
+
 ## 3. Checklist nối điện từng bước
 
-- [ ] **B0 — Chọn topology** (A/B/C ở mục 2). Mặc định chọn **C** nếu có VPS, **A** nếu muốn giữ Worker.
+- [ ] **B0 — Topology:** đã chốt **A** (Worker proxy mỏng `worker/telegram-proxy/` → Hermes gateway).
 - [ ] **B1 — BotFather:** tạo bot (đã có) → lấy `TELEGRAM_BOT_TOKEN`; `/setprivacy` → **Disable** (nếu dùng nhóm); `/setcommands`.
 - [ ] **B2 — Lấy user ID:** nhắn @userinfobot, lưu số ID của bạn.
 - [ ] **B3 — Ghi secret ngoài Git:** `~/.hermes/.env` (mode 600):
@@ -89,9 +127,8 @@ gọi `deleteWebhook`) — nếu không bot sẽ không nhận update qua pollin
       TELEGRAM_ALLOWED_USERS=<user_id_của_bạn>
       ```
       Không commit file này (đã có trong `.gitignore`).
-- [ ] **B4 — Chọn chế độ:**
-      - Polling (C): không cần thêm.
-      - Webhook (A): thêm `TELEGRAM_WEBHOOK_URL`, `TELEGRAM_WEBHOOK_SECRET=$(openssl rand -hex 32)`.
+- [ ] **B4 — Chế độ webhook (A):** thêm `TELEGRAM_WEBHOOK_URL=https://<worker>.workers.dev/telegram`,
+      `TELEGRAM_WEBHOOK_SECRET=$(openssl rand -hex 32)` (dán cùng giá trị vào `WEBHOOK_SECRET` của Worker).
 - [ ] **B5 — Xóa mọi consumer cũ:** đảm bảo Cloudflare Worker (nếu có) đã tắt `getUpdates`/`setWebhook`; chỉ 1 nơi tiêu thụ token.
 - [ ] **B6 — Chạy:** `hermes gateway` (hoặc tmux supervisor). Đọc log chờ dòng
       `[telegram] Connected to Telegram (polling mode)` / `(webhook mode)`.
