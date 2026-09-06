@@ -1,6 +1,6 @@
 # Status — Quang Quý AI
 
-Cập nhật: 2026-08-06 10:44 +07
+Cập nhật: 2026-09-05
 
 ## Tổng quan
 
@@ -18,6 +18,14 @@ Trạng thái: development runtime hoạt động; chưa production-ready.
 - Source marker Hermes khớp HEAD remote `qquy28888-ops/hermes-agent/main`: `5e51b123f32b7f6a51fbd5759e89ba5146ce4003`.
 - High-confidence credential scan trên production paths hiện tại: 0 finding.
 - `.hermes/auth.json` và `config.yaml` có mode 600; `~/.hermes` có mode 700.
+
+## Bộ nhớ thứ hai (Second Brain)
+
+- Đã thêm extension OpenClaw `second-brain` (tại `core/extensions/second-brain/`): nhập lịch sử ChatGPT (`conversations.json`), Claude.ai, Gemini (Takeout JSON/HTML) vào `memory/imports/<nguồn>/`, ghi vào index `memory search`; tự redact secret; idempotent.
+- Script standalone `scripts/second-brain-import.mjs` chạy bằng Node ≥ 22.18 không cần build OpenClaw (phù hợp Termux/Colab); hỗ trợ `import`, `ingest` (gom cả 3 nguồn từ một thư mục inbox) và `list`.
+- 20/20 test normalizer + import + ingest đạt (Node test runner).
+- Skill `skills/second-brain/SKILL.md` và runbook `docs/second-brain.md` hoàn tất.
+- Còn lại: tích hợp vào Control UI "Import Memory", tự động tải export định kỳ, policy điều phối đa model (xem `TODO.md`).
 
 ## Blocker
 
