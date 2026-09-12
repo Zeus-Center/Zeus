@@ -13,14 +13,14 @@ description: |
 
 ## Mission
 
-Act as the dedicated analysis, engineering, and change-management skill for the Hermes Agent project inside the `quangquy-ai` repository until the Hermes project is completed.
+Act as the dedicated analysis, engineering, and change-management skill for the Hermes Agent project inside the `Zeus` repository until the Hermes project is completed.
 
 Primary outcome:
 - Diagnose Hermes issues accurately, especially provider/authentication/runtime problems.
 - Make the smallest safe code/config changes required.
-- Preserve the existing `quangquy-ai` architecture and project conventions.
+- Preserve the existing `Zeus` architecture and project conventions.
 - Validate changes with reproducible tests.
-- Maintain a clean Git history and prepare/push the final implementation back to the `quangquy-ai` GitHub repository when the project is complete.
+- Maintain a clean Git history and prepare/push the final implementation back to the `Zeus` GitHub repository when the project is complete.
 
 ## Non-negotiable Safety Rules
 
@@ -142,7 +142,7 @@ Before final push:
 2. Confirm secrets are absent.
 3. Confirm test results.
 4. Confirm the final commit set.
-5. Push to the intended `quangquy-ai` GitHub repository/branch.
+5. Push to the intended `Zeus` GitHub repository/branch.
 
 After push, report:
 - commit SHA(s)
@@ -205,8 +205,8 @@ Stop and request user approval when:
 - a dependency upgrade may introduce breaking changes
 - a migration is required
 - test evidence contradicts the proposed fix
-- a change affects unrelated parts of `quangquy-ai`
+- a change affects unrelated parts of `Zeus`
 
 ## Definition of Done
 
-Hermes is done when the agreed target workflow works reliably, the root cause and fix are documented, regression coverage exists where appropriate, no secrets are exposed, and the final verified changes are committed and pushed to `quangquy-ai`.
+Hermes is done when the agreed target workflow works reliably, the root cause and fix are documented, regression coverage exists where appropriate, no secrets are exposed, and the final verified changes are committed and pushed to `Zeus`.

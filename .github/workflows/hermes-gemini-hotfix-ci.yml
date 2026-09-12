@@ -62,7 +62,7 @@ jobs:
       - name: Download Quang Quy Hermes fork adapter
         run: |
           curl -fL --retry 3 \
-            https://raw.githubusercontent.com/qquy28888-ops/hermes-agent/main/agent/gemini_native_adapter.py \
+            https://raw.githubusercontent.com/NousResearch/hermes-agent/main/agent/gemini_native_adapter.py \
             -o /tmp/hermes-adapters/quangquy-fork.py
 
       - name: Verify hotfix against both adapters

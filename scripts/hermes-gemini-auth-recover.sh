@@ -9,8 +9,8 @@ set -euo pipefail
 # - persist only a verified key to ~/.hermes/.env
 # - then run the full Hermes Gemini hotfix/live-test script
 
-SELF_URL="https://raw.githubusercontent.com/qquy28888-ops/quangquy-ai/fix/hermes-gemini-auth/scripts/hermes-gemini-auth-recover.sh"
-HOTFIX_URL="https://raw.githubusercontent.com/qquy28888-ops/quangquy-ai/fix/hermes-gemini-auth/scripts/hermes-gemini-hotfix.sh"
+SELF_URL="https://raw.githubusercontent.com/Zeus-Center/Zeus/fix/hermes-gemini-auth/scripts/hermes-gemini-auth-recover.sh"
+HOTFIX_URL="https://raw.githubusercontent.com/Zeus-Center/Zeus/fix/hermes-gemini-auth/scripts/hermes-gemini-hotfix.sh"
 MODEL="${QAI_GEMINI_TEST_MODEL:-gemini-3.6-flash}"
 
 if [ ! -d /root/hermes-env ]; then

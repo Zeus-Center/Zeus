@@ -15,7 +15,7 @@ Trạng thái: development runtime hoạt động; chưa production-ready.
 - Boot script và supervisor hợp lệ; duplicate boot script đã được đưa ra khỏi thư mục chạy.
 - Cold-start thực tế thành công: session bị xóa, boot script tạo lại session và Hermes vào prompt.
 - Python `compileall` thành công; có một `SyntaxWarning` trong test string tại `agents/hermes/tests/agent/test_credits_tracker.py:625`.
-- Source marker Hermes khớp HEAD remote `qquy28888-ops/hermes-agent/main`: `5e51b123f32b7f6a51fbd5759e89ba5146ce4003`.
+- Hermes đang pin tại `5e51b123f32b7f6a51fbd5759e89ba5146ce4003`, ghi trong `agents/hermes/.quang-quy-source-commit`. Fork kỹ thuật cũ `qquy28888-ops/hermes-agent` đã không còn tồn tại (404); nguồn đồng bộ hiện tại là `NousResearch/hermes-agent`.
 - High-confidence credential scan trên production paths hiện tại: 0 finding.
 - `.hermes/auth.json` và `config.yaml` có mode 600; `~/.hermes` có mode 700.
 
@@ -39,10 +39,11 @@ Trạng thái: development runtime hoạt động; chưa production-ready.
 
 ## Repository
 
-- Canonical: `qquy28888-ops/quangquy-ai`, branch `main`, local khớp `origin/main` trước các thay đổi audit.
-- Source history: `qquy28888-ops/hermes-agent`, branch `main`; canonical upstream của Hermes là `NousResearch/hermes-agent`.
-- Strategy: một repository Quang Quy AI duy nhất; Hermes là subtree không squash tại `agents/hermes/`, với source SHA được ghi trong marker.
-- Migration branch đã bảo toàn ancestry Hermes và thay updater snapshot bằng subtree updater; đang chờ push/PR.
+- Canonical duy nhất: **`Zeus-Center/Zeus`**, branch `main`. Mọi repo cũ đã gom vào đây — xem [bản đồ gom repo](docs/REPOSITORY-CONSOLIDATION.md).
+- Đã gom: `ZeusopenAI/ZEUS` (tên cũ `qquy28888-ops/quangquy-ai`, lịch sử nằm trọn trong Zeus), `ZeusopenAI/chat` (lưu tại `archive/zeusopenai-chat/`), `Zeus-Center/openclaw` (thành subtree `core/`), bản thân `Zeus-Center/Zeus`.
+- Source history Hermes: `NousResearch/hermes-agent`, branch `main`; subtree không squash tại `agents/hermes/`, SHA ghi trong `agents/hermes/.quang-quy-source-commit`.
+- Source OpenClaw: `Zeus-Center/openclaw` (fork mirror của `openclaw/openclaw`), subtree tại `core/`, nguồn ghi trong `core/.zeus-upstream.json`.
+- Migration branch đã bảo toàn ancestry Hermes và thay updater snapshot bằng subtree updater; đã hoàn tất.
 
 ## Mức sẵn sàng
 

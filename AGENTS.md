@@ -23,6 +23,7 @@ Xây dựng một hệ thống AI phối hợp có thể vận hành chủ yếu
 - Xử lý dữ liệu, ảnh, video và tác vụ Python.
 
 ### GitHub — Nguồn mã chính
+- Repo duy nhất: **`Zeus-Center/Zeus`**. Không tạo repo mới cho dự án này; mở thư mục mới trong `Zeus`.
 - Lưu code và tài liệu phiên bản chuẩn.
 - Theo dõi lịch sử thay đổi.
 - Tạo branch, commit và pull request.

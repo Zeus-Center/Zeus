@@ -66,10 +66,12 @@ Gate: staging soak test, rollback đã diễn tập, Telegram và workflow quan 
 
 ## Chiến lược repository
 
-Giữ hai repository với vai trò tách biệt:
+**Chỉ một repository: `Zeus-Center/Zeus`.** Đây là hệ quả của đợt gom 4 kho (2026-09-13); bản đồ chi tiết nằm ở [docs/REPOSITORY-CONSOLIDATION.md](docs/REPOSITORY-CONSOLIDATION.md).
 
-- `qquy28888-ops/quangquy-ai`: product/control plane canonical — cấu hình, automation, deployment và business logic.
-- `qquy28888-ops/hermes-agent`: technical fork — chỉ chứa patch Hermes thực sự cần cho Quang Quý.
-- `NousResearch/hermes-agent`: canonical upstream.
+Vai trò các thành phần:
 
-Quang Quy AI dùng một repository duy nhất với Hermes tại `agents/hermes/` dưới dạng Git subtree không `--squash`. Không tiếp tục copy snapshot vì cách đó mất ancestry và contributor attribution. Migration phải có backup tag, tree-equivalence check và rollback; mọi cập nhật tiếp theo chạy trên integration branch qua `scripts/update-hermes-subtree.sh`.
+- `Zeus-Center/Zeus`: repo duy nhất — tài liệu, automation, deployment, business logic, skill và CI.
+- `agents/hermes/`: Hermes Agent, Git subtree không `--squash` từ `NousResearch/hermes-agent` (canonical upstream).
+- `core/`: OpenClaw engine, subtree từ `Zeus-Center/openclaw` (mirror của `openclaw/openclaw`), có marker `core/.zeus-upstream.json`.
+
+Quy tắc: không tiếp tục copy snapshot vì cách đó mất ancestry và contributor attribution; không tạo repo mới cho dự án này. Migration phải có backup tag, tree-equivalence check và rollback; mọi cập nhật tiếp theo chạy trên integration branch qua `scripts/update-hermes-subtree.sh` và `scripts/update-openclaw-subtree.sh`. Fork kỹ thuật cũ `qquy28888-ops/hermes-agent` đã không còn tồn tại.

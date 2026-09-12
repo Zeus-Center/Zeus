@@ -11,7 +11,7 @@ set -euo pipefail
 # - verify raw Gemini REST and Hermes GeminiNativeClient with the SAME exact key
 # - patch the q startup wrapper to clear inherited Gemini env vars before Hermes loads ~/.hermes/.env
 
-BRANCH_URL="https://raw.githubusercontent.com/qquy28888-ops/quangquy-ai/fix/hermes-gemini-auth/scripts/hermes-gemini-hotfix.sh"
+BRANCH_URL="https://raw.githubusercontent.com/Zeus-Center/Zeus/fix/hermes-gemini-auth/scripts/hermes-gemini-hotfix.sh"
 
 if [ ! -d /root/hermes-env ]; then
   if command -v proot-distro >/dev/null 2>&1; then

@@ -84,17 +84,23 @@ Termux phù hợp cho development, quản trị di động và fallback. Android
 ## 6. Repository layout đích
 
 ```text
-quangquy-ai/
+Zeus/                    # repo duy nhất: Zeus-Center/Zeus
   apps/                  # sản phẩm/landing page
   services/              # API và service riêng của Quang Quý
   integrations/          # adapter riêng (khi phát sinh)
   automations/          # Make/n8n specs và webhook contracts, không chứa secret
   config/hermes/         # overlay/config không chứa secret
   deploy/                # VPS/container manifests
+  core/                  # OpenClaw engine — subtree từ Zeus-Center/openclaw
   agents/hermes/        # history-preserving subtree của Hermes
+  worker/telegram-proxy/ # proxy webhook Telegram
+  skills/                # skill nội bộ
+  archive/               # nội dung lưu từ các repo cũ đã gom
   docs/                 # runbook, audit, ADR
   scripts/              # update/validate/deploy scripts
   .github/workflows/    # CI/CD đã pin SHA
 ```
 
-`agents/hermes/` được hợp nhất bằng subtree không squash, nên lịch sử và attribution của `hermes-agent` có thể truy vết trong repository Quang Quy AI duy nhất. Các cập nhật sau phải dùng `scripts/update-hermes-subtree.sh` trên nhánh riêng. Không tạo fork tùy biến sâu nếu có thể giải bằng skill/plugin/config; điều này giữ đường cập nhật upstream đơn giản.
+`agents/hermes/` được hợp nhất bằng subtree không squash, nên lịch sử và attribution của `hermes-agent` có thể truy vết trong repository `Zeus` duy nhất. `core/` là subtree của OpenClaw, có marker `core/.zeus-upstream.json` ghi nguồn. Các cập nhật sau phải dùng `scripts/update-hermes-subtree.sh` và `scripts/update-openclaw-subtree.sh` trên nhánh riêng. Không tạo fork tùy biến sâu nếu có thể giải bằng skill/plugin/config; điều này giữ đường cập nhật upstream đơn giản.
+
+Sau đợt gom 2026-09-13, mọi repo cũ (`ZeusopenAI/ZEUS`, `ZeusopenAI/chat`, `Zeus-Center/openclaw`) đều đã có vị trí trong `Zeus`; xem [docs/REPOSITORY-CONSOLIDATION.md](docs/REPOSITORY-CONSOLIDATION.md).
