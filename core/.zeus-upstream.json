@@ -1,0 +1,16 @@
+{
+  "component": "openclaw",
+  "path_in_zeus": "core/",
+  "fork": "https://github.com/Zeus-Center/openclaw",
+  "upstream": "https://github.com/openclaw/openclaw",
+  "ref": "main",
+  "commit": "4a846f1d614c76a200586d699ad091590efbb43a",
+  "commit_date": "2026-08-25",
+  "import_method": "git subtree add --prefix=core --squash",
+  "merged_into_zeus": "2026-09-13",
+  "local_changes": [
+    "core/extensions/second-brain (extension do dự án Zeus tự viết, không có ở upstream)"
+  ],
+  "sync_command": "bash scripts/update-openclaw-subtree.sh",
+  "notes": "Fork Zeus-Center/openclaw là mirror của upstream, không có commit riêng. Lịch sử đầy đủ của upstream truy cập tại https://github.com/openclaw/openclaw."
+}

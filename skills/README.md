@@ -30,7 +30,7 @@ This directory contains reusable, domain-specific skills for the Hermes Agent pr
 - Never expose, print, or commit secrets
 - Never delete files without explicit approval
 - Never refactor unrelated code
-- Preserve `quangquy-ai` architecture and conventions
+- Preserve `Zeus` architecture and conventions
 - Make minimal, targeted changes only
 - Run tests before every commit
 - Review full git diff before commit
@@ -60,7 +60,7 @@ HTTP 401 after switching from Gemini to OpenRouter.
 ```
 Use the hermes-project-analyst-code-manager skill to implement a fix for OpenRouter
 credential resolution, validate it on both Codespaces and Android/Termux, and prepare
-the final commit for push to quangquy-ai.
+the final commit for push to Zeus (`Zeus-Center/Zeus`).
 ```
 
 ### second-brain

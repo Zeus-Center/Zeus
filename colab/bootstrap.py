@@ -2,8 +2,8 @@ from pathlib import Path
 import os
 import subprocess
 
-REPO_URL = "https://github.com/qquy28888-ops/quangquy-ai.git"
-WORKDIR = Path("/content/quangquy-ai")
+REPO_URL = "https://github.com/Zeus-Center/Zeus.git"
+WORKDIR = Path("/content/Zeus")
 
 
 def run(command: str, cwd: Path | None = None) -> None:
@@ -17,7 +17,7 @@ else:
     run("git pull", WORKDIR)
 
 os.chdir(WORKDIR)
-print("\nQuangQuy AI đã sẵn sàng tại:", WORKDIR)
+print("\nZeus đã sẵn sàng tại:", WORKDIR)
 print("Các file trong thư mục gốc:")
 for item in sorted(WORKDIR.iterdir()):
     print("-", item.name)

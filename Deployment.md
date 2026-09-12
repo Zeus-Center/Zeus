@@ -7,8 +7,9 @@ Cập nhật: 2026-08-06
 ### Đường dẫn chuẩn
 
 ```text
-Repository:  ~/quangquy-ai
-Hermes:      ~/quangquy-ai/agents/hermes
+Repository:  ~/Zeus            # repo duy nhất: Zeus-Center/Zeus (đường dẫn cũ ~/quangquy-ai vẫn chạy được)
+Hermes:      ~/Zeus/agents/hermes
+OpenClaw:    ~/Zeus/core
 Virtualenv:  ~/hermes-env
 Boot script: ~/.termux/boot/01-hermes
 Supervisor:  ~/bin/start-hermes-background.sh
@@ -80,7 +81,9 @@ feature branch → pull request → secret scan + tests + build
 → staging → approval → production → health check → rollback nếu lỗi
 ```
 
-Runtime nằm tại history-preserving subtree `agents/hermes/` trong repository Quang Quy AI duy nhất. Mỗi lần nâng Hermes phải chạy `scripts/update-hermes-subtree.sh` trên nhánh riêng, review source diff, chạy full tests/build ở CI và staging; không update trực tiếp trên production hoặc `main`.
+Runtime nằm tại history-preserving subtree `agents/hermes/` trong repository `Zeus` duy nhất (`Zeus-Center/Zeus`). Engine OpenClaw nằm tại `core/`. Mỗi lần nâng Hermes hoặc OpenClaw phải chạy tương ứng `scripts/update-hermes-subtree.sh` / `scripts/update-openclaw-subtree.sh` trên nhánh riêng, review source diff, chạy full tests/build ở CI và staging; không update trực tiếp trên production hoặc `main`.
+
+Clone lại máy mới: `git clone https://github.com/Zeus-Center/Zeus.git ~/Zeus`. Trên Colab dùng `colab/bootstrap.py` (đã trỏ về `Zeus-Center/Zeus`).
 
 ## 4. Rollback
 

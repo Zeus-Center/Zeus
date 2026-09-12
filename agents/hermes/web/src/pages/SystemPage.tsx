@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "react-router";
 import {
   Activity,
   Brain,
@@ -45,9 +45,11 @@ import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { HermesConsoleModal } from "@/components/HermesConsoleModal";
 import { cn, themedBody } from "@/lib/utils";
 import { api } from "@/lib/api";
+import { copyTextToClipboard } from "@/lib/clipboard";
 import type {
   StatusResponse,
   MemoryStatus,
+  MemoryProviderInfo,
   CredentialPoolProvider,
   CheckpointsResponse,
   HooksResponse,
@@ -57,6 +59,7 @@ import type {
   CuratorStatus,
   PortalStatus,
   DebugShareResponse,
+  GatewayMigratePlan,
 } from "@/lib/api";
 
 function formatBytes(n: number): string {
@@ -171,6 +174,23 @@ const HOOK_EVENTS_FALLBACK = [
   "on_session_end",
 ];
 
+const MEMORY_STATUS_LABEL: Record<MemoryProviderInfo["status"], string> = {
+  ready: "ready",
+  needs_config: "needs setup",
+  unavailable: "unavailable",
+  missing: "missing",
+};
+
+const MEMORY_STATUS_TONE: Record<
+  MemoryProviderInfo["status"],
+  "success" | "warning" | "destructive" | "secondary"
+> = {
+  ready: "success",
+  needs_config: "warning",
+  unavailable: "destructive",
+  missing: "destructive",
+};
+
 export default function SystemPage() {
   const { toast, showToast } = useToast();
 
@@ -188,6 +208,7 @@ export default function SystemPage() {
 
   const [activeAction, setActiveAction] = useState<string | null>(null);
   const [consoleOpen, setConsoleOpen] = useState(false);
+  const [migratePlan, setMigratePlan] = useState<GatewayMigratePlan | null>(null);
 
   // Add-credential form.
   const [credProvider, setCredProvider] = useState("openrouter");
@@ -247,8 +268,9 @@ export default function SystemPage() {
       // Cached (non-forced) check so the version row shows update status on
       // load without a separate effect / a forced network round-trip.
       api.checkHermesUpdate(false),
+      api.getGatewayMigratePlan(),
     ])
-      .then(([s, st, m, p, c, h, cur, prt, upd]) => {
+      .then(([s, st, m, p, c, h, cur, prt, upd, mig]) => {
         if (s.status === "fulfilled") setStatus(s.value);
         if (st.status === "fulfilled") setStats(st.value);
         if (m.status === "fulfilled") setMemory(m.value);
@@ -258,6 +280,7 @@ export default function SystemPage() {
         if (cur.status === "fulfilled") setCurator(cur.value);
         if (prt.status === "fulfilled") setPortal(prt.value);
         if (upd.status === "fulfilled") setUpdateInfo(upd.value);
+        if (mig.status === "fulfilled") setMigratePlan(mig.value);
       })
       .finally(() => setLoading(false));
   }, []);
@@ -283,6 +306,17 @@ export default function SystemPage() {
       setTimeout(loadAll, 3000);
     } catch (e) {
       showToast(`Gateway ${verb} failed: ${e}`, "error");
+    }
+  };
+
+  const migrateToMultiplex = async () => {
+    try {
+      await api.migrateGatewayToMultiplex();
+      setActiveAction("gateway-migrate");
+      showToast("Migrating to a single multiplexed gateway", "success");
+      setTimeout(loadAll, 5000);
+    } catch (e) {
+      showToast(`Gateway migration failed: ${e}`, "error");
     }
   };
 
@@ -456,14 +490,13 @@ export default function SystemPage() {
 
   const copyToClipboard = useCallback(
     async (text: string, label: string) => {
-      try {
-        await navigator.clipboard.writeText(text);
+      if (await copyTextToClipboard(text)) {
         setCopiedLabel(label);
         setTimeout(
           () => setCopiedLabel((cur) => (cur === label ? null : cur)),
           1500,
         );
-      } catch {
+      } else {
         showToast("Couldn't copy to clipboard", "error");
       }
     },
@@ -620,6 +653,9 @@ export default function SystemPage() {
 
   const gatewayRunning = status?.gateway_running;
   const canUpdateHermes = status?.can_update_hermes !== false;
+  const activeMemoryProvider = memory?.active
+    ? memory.providers.find((provider) => provider.name === memory.active)
+    : null;
   const validEvents = hooks?.valid_events?.length
     ? hooks.valid_events
     : HOOK_EVENTS_FALLBACK;
@@ -1060,6 +1096,29 @@ export default function SystemPage() {
               </Button>
             </div>
           </CardContent>
+          {migratePlan && !migratePlan.already_multiplexed && migratePlan.profiles.length > 1 && (
+            migratePlan.eligible || migratePlan.blockers.length > 0
+          ) && (
+            <CardContent className="flex flex-col gap-2 border-t border-border py-4 text-sm">
+              <div className="flex items-center justify-between gap-3">
+                <span className="text-muted-foreground">
+                  Your profiles each run their own gateway. One multiplexed gateway serves every profile from a single process.
+                </span>
+                <Button
+                  size="sm"
+                  className="uppercase"
+                  onClick={migrateToMultiplex}
+                  disabled={!migratePlan.eligible}
+                  title={migratePlan.eligible ? undefined : "Fix the blockers below first"}
+                >
+                  Migrate to a single multiplexed gateway
+                </Button>
+              </div>
+              {migratePlan.blockers.map((b) => (
+                <div key={b} className="text-warning">• {b}</div>
+              ))}
+            </CardContent>
+          )}
         </Card>
       </section>
 
@@ -1077,14 +1136,27 @@ export default function SystemPage() {
                   {memory?.active || "built-in only"}
                 </span>
               </span>
+              {activeMemoryProvider && (
+                <Badge tone={MEMORY_STATUS_TONE[activeMemoryProvider.status]}>
+                  {MEMORY_STATUS_LABEL[activeMemoryProvider.status]}
+                </Badge>
+              )}
               <Link to="/plugins" className="underline">
                 Change in Plugins →
               </Link>
               <span className="ml-auto">
-                New credentials:{" "}
-                <span className="font-mono">hermes memory setup</span>
+                Provider setup:{" "}
+                <Link to="/plugins" className="underline">
+                  configure in Plugins
+                </Link>
               </span>
             </div>
+
+            {activeMemoryProvider?.status === "missing" && (
+              <p className="border border-destructive/50 px-3 py-2 text-xs text-destructive">
+                The configured provider is no longer installed. Switch to built-in memory or configure another provider in Plugins.
+              </p>
+            )}
 
             <div className="flex flex-wrap items-center gap-3 border-t border-border pt-3">
               <span className="text-xs text-muted-foreground">
