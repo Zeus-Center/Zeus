@@ -271,6 +271,21 @@ What's the weather in Las Vegas?                    3d ago        tele   2025030
 
 ### 导出 Session
 
+`hermes sessions export` 是所有导出格式的统一入口，用 `--format` 选择：
+
+| 格式 | 输出 | 适用场景 |
+|------|------|----------|
+| `jsonl`（默认） | 每个 session 一个 JSON 对象 | 备份、机器可读的往返格式 |
+| `md` / `qmd` | 每个 session 一个 Markdown/Quarto 文件 + manifest | 可读归档、笔记 |
+| `html` | 单个独立页面（多 session 带侧边栏） | 分享、浏览 |
+| `trace` | Claude Code JSONL | HF Agent Trace Viewer、`--upload` |
+
+另有 `--only user-prompts` 只导出你的 prompt（jsonl 或 md）。
+
+所有格式共享同一套选择方式：`--session-id` 导出单个 session，或使用与 `prune` / `archive` 相同的完整过滤器进行批量导出 — `--older-than` / `--newer-than` / `--before` / `--after`（时长如 `5h`/`2d`/`1w`、纯数字天数或 ISO 时间戳）、`--source`、`--title`、`--model`、`--provider`、`--cwd`、`--min/--max-messages`、`--min/--max-tokens`、`--min/--max-cost`、`--min/--max-tool-calls`、`--user`、`--chat-id`、`--chat-type`、`--branch`、`--end-reason`。`--dry-run` 可预览匹配集而不写入。`--redact` 在任意格式下从导出内容中清除密钥（API key、token、凭据）— 任何打算分享的导出都建议加上。注意：带过滤器的批量导出只匹配*已结束*的 session；不带过滤器的 `export` 会导出所有 session（包括活跃的）。
+
+#### JSONL（默认）
+
 ```bash
 # 将所有 session 导出到 JSONL 文件
 hermes sessions export backup.jsonl
@@ -287,9 +302,7 @@ hermes sessions export backup.jsonl --redact
 
 导出文件每行包含一个 JSON 对象，包含完整的 session 元数据和所有消息。
 
-`export` 接受与 `prune` / `archive` 相同的过滤器 — `--older-than` / `--newer-than` / `--before` / `--after`（时长如 `5h`/`2d`/`1w`、纯数字天数或 ISO 时间戳）、`--source`、`--title`、`--model`、`--provider`、`--cwd`、`--min-messages` / `--max-messages`、`--min-tokens` / `--max-tokens`、`--min-cost` / `--max-cost`、`--min-tool-calls` / `--max-tool-calls`、`--user`、`--chat-id`、`--chat-type`、`--branch` 和 `--end-reason`。加 `--dry-run` 可预览匹配的 session 而不写入任何内容。注意：带过滤器的批量导出只匹配*已结束*的 session；不带过滤器的 `export` 会导出所有 session（包括活跃的）。
-
-### 导出 Session 为 HTML
+#### HTML
 
 `--format html` 生成一个完全独立的 HTML 文件 — 无远程依赖 — 带样式化的消息气泡、可折叠的工具输出，多 session 导出时还带侧边栏导航：
 
@@ -301,7 +314,7 @@ hermes sessions export --format html --session-id 20250305_091523_a1b2c3d4 trans
 hermes sessions export --format html --newer-than 1w --source telegram --redact archive.html
 ```
 
-### 只导出你的 Prompt
+#### 只导出 Prompt
 
 `--only user-prompts` 只导出你写的 prompt — 不含助手回复、工具输出或系统上下文。适合构建 prompt 库或回顾你问过什么：
 
@@ -315,7 +328,24 @@ hermes sessions export - --session-id 20250305_091523_a1b2c3d4 --only user-promp
 
 支持 `--format jsonl`（默认）或 `md`，批量导出时同样支持全部过滤器，也可与 `--redact` 组合。
 
-### 导出 Session 为 Markdown/QMD
+#### Trace（HF Agent Trace Viewer）
+
+`--format trace` 生成 Claude Code JSONL — Hugging Face Hub 的 [Agent Trace Viewer](https://huggingface.co/docs/hub/agent-traces) 可自动识别的转录格式。可以写入本地文件，或加 `--upload` 推送到你自己的私有 `hermes-traces` 数据集（读取 `HF_TOKEN`）：
+
+```bash
+# 最近一个 session 的 trace，输出到 stdout
+hermes sessions export --format trace
+
+# 将一个 session 导出为本地 trace 文件
+hermes sessions export --format trace --session-id 20250305_091523_a1b2c3d4 trace.jsonl
+
+# 直接上传到你的私有 HF traces 数据集
+hermes sessions export --format trace --session-id 20250305_091523_a1b2c3d4 --upload
+```
+
+Trace 导出默认强制脱敏（它们本来就是要离开本机的）；`--no-redact` 需人工审查后才建议使用。`--upload` 默认私有，除非加 `--public`。带过滤器的批量 trace 导出会为每个 session 写一个 `<id>.trace.jsonl`。
+
+#### Markdown / QMD
 
 当你想在隐藏或删除旧 session 之前保留一份可读的文件归档时，传入 `--format md` 或 `--format qmd`。Markdown/QMD 导出会为每个 session 写入一个文件到目录中（默认：`~/.hermes/session-exports`）。
 
@@ -505,18 +535,13 @@ group_sessions_per_user: false
 
 这会将群组/频道恢复为每个房间一个共享 session，保留共享的对话上下文，但也共享 token 费用、中断状态和上下文增长。
 
-### Session 重置策略
+### 会话连续性
 
-**默认情况下 Gateway session 永不自动重置**（`mode: none`）。你可以通过 `config.yaml` 中的 `session_reset` 部分选择启用自动重置：
+Gateway 不会因空闲时间或每日时间边界而重置对话。需要新对话时使用 `/new`
+或 `/reset`；上下文压缩仍会自动运行。旧的 `session_reset` 配置、重置策略覆盖和
+重置计时环境变量均被忽略。缓存中的 agent 可以释放资源，但不会替换持久化对话。
+重启恢复的新鲜度限制仅约束自动继续执行，不会清除用户发送消息时加载的历史。
 
-- **none** — 永不自动重置（默认；上下文由 `/reset` 和压缩管理）
-- **idle** — 在 N 分钟不活跃后重置
-- **daily** — 每天在特定时间重置
-- **both** — 以先到者为准（idle 或 daily）
-
-在 session 自动重置之前，agent 会有一轮机会保存对话中的重要记忆或技能。
-
-有**活跃后台进程**的 session 永远不会自动重置，无论策略如何。
 
 ## 存储位置
 
@@ -546,10 +571,10 @@ state.db 后可安全删除。
 
 ### 自动清理
 
-- Gateway session 根据配置的重置策略自动重置
+- Gateway 会话会持续保留；请使用 `/new` 或 `/reset` 显式开始新会话
 - 重置前，agent 保存即将过期 session 中的记忆和技能
 - 可选自动清理：当 `sessions.auto_prune` 为 `true` 时，在 CLI/gateway 启动时清理早于 `sessions.retention_days`（默认 90）天的已结束 session
-- 实际删除了行的清理操作完成后，`state.db` 会执行 `VACUUM` 以回收磁盘空间（SQLite 在普通 DELETE 后不会缩小文件）
+- 实际删除了行的清理操作完成后，如果距离上次成功执行 `VACUUM` 已达到 `sessions.min_vacuum_interval_days`（默认 30）天，`state.db` 会执行 `VACUUM` 以回收磁盘空间（SQLite 在普通 DELETE 后不会缩小文件）
 - 清理最多每 `sessions.min_interval_hours`（默认 24）小时运行一次；上次运行时间戳记录在 `state.db` 内部，因此在同一 `HERMES_HOME` 下的所有 Hermes 进程间共享
 
 默认为**关闭**——session 历史对 `session_search` 召回很有价值，静默删除可能会让用户感到意外。在 `~/.hermes/config.yaml` 中启用：
@@ -559,6 +584,7 @@ sessions:
   auto_prune: true          # 选择启用——默认为 false
   retention_days: 90        # 保留已结束 session 的天数
   vacuum_after_prune: true  # 清理后回收磁盘空间
+  min_vacuum_interval_days: 30 # 数据库重写的最短间隔天数
   min_interval_hours: 24    # 清理间隔不短于此值
 ```
 
