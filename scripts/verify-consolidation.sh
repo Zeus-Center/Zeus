@@ -30,9 +30,12 @@ else
   bad "không tìm thấy commit 0649422 (repo cũ ZeusopenAI/ZEUS)"
 fi
 
-git cat-file -e 5e51b123f32b7f6a51fbd5759e89ba5146ce4003 2>/dev/null \
-  && pass "mốc Hermes 5e51b12 nằm trong lịch sử" \
-  || bad "mất mốc Hermes 5e51b12"
+HERMES_PIN="$(tr -d ' \r\n' < agents/hermes/.quang-quy-source-commit 2>/dev/null || true)"
+if [ -n "$HERMES_PIN" ] && git cat-file -e "$HERMES_PIN" 2>/dev/null; then
+  pass "mốc Hermes ${HERMES_PIN:0:12} (theo marker) nằm trong lịch sử"
+else
+  bad "marker agents/hermes/.quang-quy-source-commit trống hoặc trỏ về commit không có trong lịch sử"
+fi
 
 echo "== Tham chiếu lỗi thời =="
 # Chỉ coi là lỗi khi còn URL trỏ tới repo cũ (fork hermes-agent đã 404, quangquy-ai đã đổi tên).

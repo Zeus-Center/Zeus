@@ -17,7 +17,7 @@ Ngoài ra có hai repo **upstream bên ngoài** — không phải repo của d�
 
 | Upstream | Vai trò | Vị trí trong `Zeus` | Mốc hiện tại |
 |---|---|---|---|
-| [`NousResearch/hermes-agent`](https://github.com/NousResearch/hermes-agent) | nguồn của Hermes Agent | `agents/hermes/` (subtree giữ lịch sử) | đang pin `5e51b12…` (2026-08-06); upstream mới nhất `9a60a7f…` (2026-09-12) |
+| [`NousResearch/hermes-agent`](https://github.com/NousResearch/hermes-agent) | nguồn của Hermes Agent | `agents/hermes/` (subtree giữ lịch sử) | đã đồng bộ tới `1c671be…` (2026-09-12) vào 2026-09-13; trước đó pin `5e51b12…` (2026-07-07) |
 | [`openclaw/openclaw`](https://github.com/openclaw/openclaw) | nguồn gốc của `Zeus-Center/openclaw` | gián tiếp qua `core/` | `core/` đang ở `4a846f1d…` (2026-08-25) |
 
 > Lưu ý: fork kỹ thuật cũ `qquy28888-ops/hermes-agent` **không còn tồn tại** (GitHub trả 404). Mọi script và workflow đã được đổi sang `NousResearch/hermes-agent`.
@@ -79,5 +79,5 @@ Quy trình bắt buộc: chạy script trên nhánh riêng → review diff → c
 
 1. **Archive** (không xóa) 3 repo cũ: `ZeusopenAI/ZEUS`, `ZeusopenAI/chat`, `Zeus-Center/openclaw`. Chỉ làm khi bạn xác nhận.
 2. Cập nhật nhánh mặc định/README của các repo cũ để trỏ về `Zeus-Center/Zeus` trước khi archive.
-3. Đồng bộ `agents/hermes/` từ `5e51b12` lên upstream mới hơn khi có thời gian chạy test (đang chậm ~1 tháng commit).
+3. Chạy full test suite Hermes trên Linux CI/VPS sau đợt đồng bộ 2026-09-13 (19.208 commit upstream, +19k commit lịch sử); chưa chạy được trên Termux do `PermissionError` ở subprocess test harness.
 4. Sửa workflow `.github/workflows/integrate-hermes.yml`: workflow này sinh ra từ giai đoạn tích hợp Hermes, nay đã lỗi thời (tích hợp đã xong); nên thay bằng workflow đồng bộ subtree định kỳ.

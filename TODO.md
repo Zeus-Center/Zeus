@@ -21,6 +21,8 @@ Cập nhật: 2026-08-06
 - [x] Gom 4 kho thành 1 kho duy nhất `Zeus-Center/Zeus`: `ZeusopenAI/ZEUS` (lịch sử đã nằm trong Zeus), `ZeusopenAI/chat` (lưu tại `archive/zeusopenai-chat/`), `Zeus-Center/openclaw` (thành subtree `core/` có marker nguồn), `Zeus-Center/Zeus` (repo đích). Bản đồ: `docs/REPOSITORY-CONSOLIDATION.md`; kiểm tra bằng `scripts/verify-consolidation.sh`.
 - [ ] Archive (không xóa) 3 repo cũ `ZeusopenAI/ZEUS`, `ZeusopenAI/chat`, `Zeus-Center/openclaw`; trước đó sửa README/nhánh mặc định của chúng để trỏ về `Zeus-Center/Zeus`. Cần xác nhận của chủ dự án.
 - [ ] Thay workflow `.github/workflows/integrate-hermes.yml` (đã lỗi thời) bằng workflow đồng bộ subtree định kỳ cho `core/` và `agents/hermes/`.
+- [x] Đồng bộ `agents/hermes/` từ `5e51b12` (2026-07-07) lên `1c671be` (2026-09-12) — 19.208 commit upstream — bằng `scripts/update-hermes-subtree.sh`; không xung đột vì trước đó không có patch riêng trong `agents/hermes/` (chỉ có file marker).
+- [ ] Chạy full test suite Hermes trên Linux CI/VPS sau đợt đồng bộ (Termux gặp `PermissionError` ở subprocess test harness) trước khi đưa lên production.
 - [x] Extension OpenClaw `second-brain`: nhập lịch sử ChatGPT / Claude.ai / Gemini vào `memory/imports/*` (kèm test + script standalone `scripts/second-brain-import.mjs` với `import`/`ingest`/`list`). Runbook: `docs/second-brain.md`.
 - [ ] Đăng nhập `gh auth login`; bật branch protection và required CI trên `main`.
 - [x] Tạo backup tag và migration branch; thay snapshot Hermes bằng subtree không squash để giữ một repository và bảo toàn lịch sử.

@@ -15,7 +15,7 @@ Trạng thái: development runtime hoạt động; chưa production-ready.
 - Boot script và supervisor hợp lệ; duplicate boot script đã được đưa ra khỏi thư mục chạy.
 - Cold-start thực tế thành công: session bị xóa, boot script tạo lại session và Hermes vào prompt.
 - Python `compileall` thành công; có một `SyntaxWarning` trong test string tại `agents/hermes/tests/agent/test_credits_tracker.py:625`.
-- Hermes đang pin tại `5e51b123f32b7f6a51fbd5759e89ba5146ce4003`, ghi trong `agents/hermes/.quang-quy-source-commit`. Fork kỹ thuật cũ `qquy28888-ops/hermes-agent` đã không còn tồn tại (404); nguồn đồng bộ hiện tại là `NousResearch/hermes-agent`.
+- Hermes đang ở mốc `1c671beab29164d8931c5d01c5739502267089d8` (2026-09-12), ghi trong `agents/hermes/.quang-quy-source-commit`; đã đồng bộ từ mốc cũ `5e51b12` (2026-07-07) vào 2026-09-13 bằng `scripts/update-hermes-subtree.sh`. Fork kỹ thuật cũ `qquy28888-ops/hermes-agent` đã không còn tồn tại (404); nguồn đồng bộ hiện tại là `NousResearch/hermes-agent`.
 - High-confidence credential scan trên production paths hiện tại: 0 finding.
 - `.hermes/auth.json` và `config.yaml` có mode 600; `~/.hermes` có mode 700.
 

@@ -6,7 +6,7 @@ Hermes is vendored under `agents/hermes/` as the orchestration runtime for Zeus 
 
 - History-preserving subtree source: `NousResearch/hermes-agent`, branch `main`
   (the old technical fork `qquy28888-ops/hermes-agent` no longer exists — HTTP 404)
-- Exact integrated revision: `agents/hermes/.quang-quy-source-commit` (pinned at `5e51b123f32b7f6a51fbd5759e89ba5146ce4003`)
+- Exact integrated revision: `agents/hermes/.quang-quy-source-commit` (currently `1c671beab29164d8931c5d01c5739502267089d8`, 2026-09-12; synced 2026-09-13 from `5e51b123f32b7f6a51fbd5759e89ba5146ce4003`)
 - The source commit and its ancestry are reachable from the Quang Quy AI history.
 - The original Hermes license and attribution files remain inside `agents/hermes/`.
 
