@@ -18,6 +18,7 @@ Cập nhật: 2026-08-06
 
 ## P1 — tích hợp vận hành
 
+- [x] Extension OpenClaw `second-brain`: nhập lịch sử ChatGPT / Claude.ai / Gemini vào `memory/imports/*` (kèm test + script standalone `scripts/second-brain-import.mjs` với `import`/`ingest`/`list`). Runbook: `docs/second-brain.md`.
 - [ ] Đăng nhập `gh auth login`; bật branch protection và required CI trên `main`.
 - [x] Tạo backup tag và migration branch; thay snapshot Hermes bằng subtree không squash để giữ một repository và bảo toàn lịch sử.
 - [ ] Đồng bộ technical fork với `NousResearch/hermes-agent` theo batch có review/test; dọn branch refs sau khi xác minh không còn active work.
@@ -32,6 +33,9 @@ Cập nhật: 2026-08-06
 
 ## P2 — production
 
+- [ ] Tích hợp các nguồn web (ChatGPT/Claude.ai/Gemini) vào Control UI "Import Memory" (hiện UI chỉ hỗ trợ Codex/Claude Code/Hermes qua `openclaw migrate`).
+- [ ] Lập lịch tự động tải export (Google Takeout scheduled export, ChatGPT scheduled export) và import vào cron.
+- [ ] Viết policy điều phối đa model để Hermes tự động giao việc (ChatGPT chiến lược, Claude code, Gemini nghiên cứu) và ghi kết quả về bộ nhớ chung.
 - [ ] Chuyển tiến trình 24/7 sang VPS Ubuntu; giữ Android/Termux làm control plane dự phòng.
 - [ ] Chạy Hermes Gateway dưới service manager, auto-restart và log rotation.
 - [ ] Thêm staging trước production; deploy qua pull request và approval.

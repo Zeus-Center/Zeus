@@ -28,5 +28,7 @@ Hermes Agent đã được tích hợp tại `agents/hermes/` và đang đóng v
 - [Roadmap](Roadmap.md)
 - [Architecture](Architecture.md)
 - [Deployment](Deployment.md)
+- [Bộ nhớ thứ hai (Second Brain)](docs/second-brain.md)
+- [Báo cáo tiến trình](docs/PROGRESS_REVIEW_2026-09-05.md)
 - [Repository audit](docs/AUDIT_2026-08-06.md)
 - [Secret management](docs/SecretManagement.md)

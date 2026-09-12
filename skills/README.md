@@ -63,6 +63,40 @@ credential resolution, validate it on both Codespaces and Android/Termux, and pr
 the final commit for push to quangquy-ai.
 ```
 
+### second-brain
+
+**Purpose**: Capture, organize, and recall everything exchanged with ChatGPT,
+Claude.ai, Gemini, OpenClaw, and Hermes in one searchable memory.
+
+**When to use**:
+- Importing a chat export (`conversations.json`, Claude export folder, Gemini Takeout).
+- Recalling "something we talked about before" with another AI.
+- Handing shared memory (`USER.md`/`MEMORY.md`) to another AI so it continues a thread.
+- Routing work to the right AI (ChatGPT: strategy, Claude: code, Gemini: research).
+
+**What it does**:
+1. Ingest exports → `memory/imports/<source>/*.md` (idempotent, secrets redacted).
+2. Recall via `memory search` / `memory_get`.
+3. Promote durable facts to `MEMORY.md` only with operator confirmation.
+4. Enforce the shared-memory round-trip contract with external AIs.
+
+**Commands**:
+```bash
+openclaw second-brain import chatgpt  --from ~/Downloads/conversations.json
+openclaw second-brain import claude-ai --from ~/Downloads/claude-export/
+openclaw second-brain import gemini   --from ~/Downloads/Takeout/Gemini/
+openclaw second-brain list
+# Hoặc không cần build OpenClaw:
+node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json
+```
+
+**Safety rules**:
+- Redact secrets before writing; never commit exports or secrets to Git.
+- Imported history is read-only archive; never auto-promotes into `MEMORY.md`.
+- Ask before `--overwrite` or deleting imported notes.
+
+Full guide: [docs/second-brain.md](../docs/second-brain.md)
+
 ---
 
 ## Skill Development Guidelines
