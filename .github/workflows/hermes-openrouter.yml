@@ -1,0 +1,158 @@
+name: Hermes task runner (OpenRouter)
+
+# Chạy Hermes agent trên GitHub Actions, model gọi qua OpenRouter.
+# Chỉ chạy THỦ CÔNG (workflow_dispatch) để chủ động kiểm soát credit OpenRouter.
+# Xem hướng dẫn đầy đủ: docs/HERMES_ACTIONS.md
+
+on:
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Nhiệm vụ cho Hermes (VD: 'Tạo ảnh logo...', 'Viết script đổi tên file...')"
+        required: true
+        type: string
+      model:
+        description: "Model OpenRouter cho văn bản/code"
+        required: true
+        default: "google/gemini-2.5-flash"
+        type: string
+      image_mode:
+        description: "Bật chế độ tạo ảnh (toolset image_gen + model google/gemini-2.5-flash-image)"
+        required: false
+        default: false
+        type: boolean
+      max_turns:
+        description: "Số vòng gọi tool tối đa (giới hạn để tránh tốn credit)"
+        required: false
+        default: "6"
+        type: string
+      save_to_repo:
+        description: "Lưu file kết quả vào repo + tự mở Pull Request"
+        required: false
+        default: true
+        type: boolean
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: hermes-openrouter-runner
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Kiểm tra secret OPENROUTER_API_KEY
+        run: |
+          if [ -z "$OPENROUTER_API_KEY" ]; then
+            echo "::error::Chưa có secret OPENROUTER_API_KEY. Vào Settings -> Secrets and variables -> Actions -> New repository secret để thêm."
+            exit 1
+          fi
+          echo "Secret da san sang (an toan, khong hien thi gia tri)."
+
+      - name: Cài đặt Hermes agent
+        run: |
+          python -m pip install --upgrade pip uv
+          uv pip install --system ./agents/hermes
+
+      - name: Tạo dataset (1 prompt)
+        env:
+          TASK_PROMPT: ${{ inputs.prompt }}
+        run: |
+          mkdir -p build/hermes-task
+          python - <<'PY'
+          import json, os
+          prompt = os.environ["TASK_PROMPT"].strip()
+          with open("build/hermes-task/dataset.jsonl", "w", encoding="utf-8") as f:
+              f.write(json.dumps({"prompt": prompt}, ensure_ascii=False) + "\n")
+          print("Dataset OK:", len(prompt), "ky tu")
+          PY
+
+      - name: Chạy Hermes qua OpenRouter
+        env:
+          RUN_NAME: gh-${{ github.run_id }}
+          MODEL: ${{ inputs.image_mode && 'google/gemini-2.5-flash-image' || inputs.model }}
+          DIST: ${{ inputs.image_mode && 'image_gen' || 'default' }}
+        run: |
+          echo "Model: $MODEL | Toolset: $DIST | Run: $RUN_NAME"
+          python agents/hermes/batch_runner.py \
+            --dataset_file=build/hermes-task/dataset.jsonl \
+            --batch_size=1 \
+            --run_name="$RUN_NAME" \
+            --model="$MODEL" \
+            --max_turns="${{ inputs.max_turns }}" \
+            --distribution="$DIST" \
+            --num_workers=1 \
+            --verbose
+
+      - name: Thu thập kết quả
+        if: always()
+        run: |
+          mkdir -p build/artifacts/logs build/artifacts/files
+          # Trajectories + thong ke cua run
+          cp -r "data/gh-${GITHUB_RUN_ID}" build/artifacts/logs/ 2>/dev/null || true
+          # File agent tu tao / sua trong repo
+          git status --porcelain=v1 | while read -r status path; do
+            case "$path" in
+              build/*|data/*) continue ;;
+            esac
+            if [ -f "$path" ]; then
+              mkdir -p "build/artifacts/files/$(dirname "$path")"
+              cp "$path" "build/artifacts/files/$path"
+              echo "Collected: $path"
+            fi
+          done
+          echo "== Artifacts =="
+          find build/artifacts -type f | head -100
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hermes-output-${{ github.run_id }}
+          path: build/artifacts
+          retention-days: 30
+
+      - name: Lưu kết quả vào repo + mở Pull Request
+        if: always() && inputs.save_to_repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TASK_PROMPT: ${{ inputs.prompt }}
+        run: |
+          set -e
+          # Khong dua thu muc build/ (file tam) vao repo
+          git reset -q build 2>/dev/null || true
+          git add -A -- . ':!build'
+          if git diff --cached --quiet; then
+            echo "Hermes khong tao file moi nao -> khong can commit/PR."
+            exit 0
+          fi
+          BR="hermes-runs/${GITHUB_RUN_ID}"
+          git config user.name "hermes-openrouter[bot]"
+          git config user.email "hermes-openrouter[bot]@users.noreply.github.com"
+          git checkout -b "$BR"
+          git commit -m "chore: ket qua Hermes run ${GITHUB_RUN_ID}"
+          git push -u origin "$BR"
+          gh pr create --base main --head "$BR" \
+            --title "🤖 Kết quả Hermes run #${GITHUB_RUN_NUMBER}" \
+            --body "## Nhiệm vụ
+          ${TASK_PROMPT}
+
+          ---
+          - Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}
+          - Tạo tự động bởi workflow \`hermes-openrouter.yml\`
+          - Kiểm tra file, nếu OK thì bấm **Merge**; không cần thì đóng PR + xóa nhánh." \
+            || echo "PR da ton tai, bo qua."

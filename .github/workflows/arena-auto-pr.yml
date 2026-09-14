@@ -1,0 +1,46 @@
+name: Arena -> auto PR sync
+
+# Mỗi khi Arena agent push code lên nhánh arena/**, workflow này tự mở
+# (hoặc cập nhật) Pull Request về main — chỉ việc bấm Merge.
+# Miễn phí 100%: không dùng OpenRouter, chỉ dùng GITHUB_TOKEN tích hợp sẵn.
+
+on:
+  push:
+    branches:
+      - "arena/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  auto-pr:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Tạo / cập nhật Pull Request về main
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BR="${GITHUB_REF_NAME}"
+          git fetch origin main --depth=1 >/dev/null 2>&1 || true
+          if git diff --quiet origin/main..."${BR}" 2>/dev/null; then
+            echo "Nhanh ${BR} khong khac main -> bo qua."
+            exit 0
+          fi
+          if gh pr view "$BR" --json number >/dev/null 2>&1; then
+            echo "PR cho nhanh ${BR} da ton tai -> chi cap nhat moi push."
+          else
+            gh pr create --base main --head "$BR" \
+              --title "🔄 Arena sync: ${BR}" \
+              --body "Đồng bộ tự động code chạy thành công từ Arena (commit ${GITHUB_SHA}).
+
+              - Kiểm tra tab **Files changed**, ok thì bấm **Merge**.
+              - Tạo bởi workflow \`arena-auto-pr.yml\`."
+            echo "Da tao PR tu ${BR} -> main"
+          fi
