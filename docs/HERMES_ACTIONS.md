@@ -1,6 +1,6 @@
 # Chạy Hermes bằng OpenRouter trên GitHub Actions
 
-Hướng dẫn này dành cho repo **Zeus-Center/Zeus** — không cần thẻ tín dụng, không cần Codespaces.
+Hướng dẫn này dành cho repo **ZeusopenAI/ZEUS** — không cần thẻ tín dụng, không cần Codespaces.
 
 ## Có 2 workflow mới
 

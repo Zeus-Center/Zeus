@@ -1,19 +1,18 @@
 #!/usr/bin/env node
-// Standalone "second brain" importer for Quang Quý AI.
+// Standalone "Second Brain" importer for Zeus / Hermes.
 //
 // Imports ChatGPT / Claude.ai / Gemini conversation exports into plain Markdown
-// notes under a workspace `memory/imports/<source>/` directory, the same layout
-// the OpenClaw `second-brain` plugin writes. This script runs without building
-// OpenClaw (Node >= 22.18 type-strips the shared TypeScript core).
+// notes under `memory/imports/<source>/` directory for Hermes memory retrieval.
+// This script runs standalone with Node >= 22 (node --experimental-strip-types or native).
 //
 // Usage:
 //   node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json
 //   node scripts/second-brain-import.mjs import claude-ai --from ~/Downloads/claude-export/
 //   node scripts/second-brain-import.mjs import gemini --from ~/Downloads/Takeout/Gemini/
-//   node scripts/second-brain-import.mjs list --out ~/.openclaw/workspace/memory/imports
+//   node scripts/second-brain-import.mjs list --out ~/.hermes/memory/imports
 //
-// The `--out` directory defaults to ~/.openclaw/workspace/memory/imports so the
-// notes land where the OpenClaw memory index will pick them up.
+// The `--out` directory defaults to ~/.hermes/memory/imports so notes land where
+// Hermes memory indexes can find them.
 
 import os from "node:os";
 import path from "node:path";
@@ -21,13 +20,15 @@ import {
   importSecondBrainSource,
   ingestSecondBrainInbox,
   listSecondBrainSources,
-} from "../core/extensions/second-brain/src/import-conversations.ts";
+} from "./second-brain/import-conversations.ts";
 import {
   SECOND_BRAIN_SOURCE_IDS,
   SECOND_BRAIN_SOURCE_LABELS,
-} from "../core/extensions/second-brain/src/types.ts";
+} from "./second-brain/types.ts";
 
-const DEFAULT_IMPORTS_ROOT = path.join(os.homedir(), ".openclaw", "workspace", "memory", "imports");
+const DEFAULT_IMPORTS_ROOT =
+  process.env.SECOND_BRAIN_IMPORTS_DIR ||
+  path.join(os.homedir(), ".hermes", "memory", "imports");
 
 function parseArgs(argv) {
   const args = argv.slice(2);

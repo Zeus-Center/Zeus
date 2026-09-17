@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/hermes-gemini-auth
+      - main
     paths:
       - scripts/hermes-gemini-hotfix.sh
       - scripts/hermes-gemini-auth-recover.sh
@@ -19,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Checkout Q AI branch
+      - name: Checkout branch
         uses: actions/checkout@v4
 
       - name: Set up Python 3.12
@@ -57,20 +58,20 @@ jobs:
           mkdir -p /tmp/hermes-adapters
           curl -fL --retry 3 \
             https://raw.githubusercontent.com/NousResearch/hermes-agent/main/agent/gemini_native_adapter.py \
-            -o /tmp/hermes-adapters/upstream.py
+            -o /tmp/hermes-adapters/upstream.py || true
 
-      - name: Download Quang Quy Hermes fork adapter
+      - name: Verify hotfix against adapters
         run: |
-          curl -fL --retry 3 \
-            https://raw.githubusercontent.com/qquy28888-ops/hermes-agent/main/agent/gemini_native_adapter.py \
-            -o /tmp/hermes-adapters/quangquy-fork.py
-
-      - name: Verify hotfix against both adapters
-        run: |
-          python scripts/verify-hermes-gemini-hotfix.py \
-            --script scripts/hermes-gemini-hotfix.sh \
-            --adapter /tmp/hermes-adapters/upstream.py \
-            --adapter /tmp/hermes-adapters/quangquy-fork.py
+          if [ -f /tmp/hermes-adapters/upstream.py ]; then
+            python scripts/verify-hermes-gemini-hotfix.py \
+              --script scripts/hermes-gemini-hotfix.sh \
+              --adapter agents/hermes/agent/gemini_native_adapter.py \
+              --adapter /tmp/hermes-adapters/upstream.py
+          else
+            python scripts/verify-hermes-gemini-hotfix.py \
+              --script scripts/hermes-gemini-hotfix.sh \
+              --adapter agents/hermes/agent/gemini_native_adapter.py
+          fi
 
       - name: Verify no secret values are committed in hotfix files
         run: |

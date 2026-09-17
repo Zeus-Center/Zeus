@@ -1,6 +1,6 @@
 ---
 name: second-brain
-description: Capture, organize, and recall everything the operator has exchanged with ChatGPT, Claude.ai, Gemini, OpenClaw, and Hermes. Use to import a chat export, search the unified memory, or hand shared memory to another AI so nothing is forgotten.
+description: Capture, organize, and recall everything the operator has exchanged with ChatGPT, Claude.ai, Gemini, and Hermes. Use to import chat exports, search unified memory, or hand shared memory to another AI so nothing is forgotten.
 license: MIT-compatible synthesized workflow; do not copy third-party source verbatim.
 ---
 
@@ -9,20 +9,19 @@ license: MIT-compatible synthesized workflow; do not copy third-party source ver
 ## Mission
 
 Maintain a single, searchable, plain-file memory for everything the operator has
-talked about or exchanged online across AIs (ChatGPT, Claude.ai, Gemini,
-OpenClaw, Hermes). The second brain is **not** a new database: it lives inside the
-OpenClaw memory index under `memory/imports/<source>/`, so `memory_search` and
-`memory_get` can recall it on demand without bloating the bootstrap prompt.
+talked about or exchanged online across AIs (ChatGPT, Claude.ai, Gemini, Hermes).
+The second brain lives under `~/.hermes/memory/imports/<source>/`, so memory recall
+can query it on demand without bloating the bootstrap prompt.
 
 ## Mental model
 
 | Layer            | Where                             | Purpose                                   |
 | ---------------- | --------------------------------- | ----------------------------------------- |
 | Curated core     | `MEMORY.md`, `USER.md`            | Durable facts, loaded every session       |
-| Episodic archive | `memory/imports/<source>/*.md`    | Imported chat history, searchable on demand |
+| Episodic archive | `~/.hermes/memory/imports/<source>/*.md` | Imported chat history, searchable on demand |
 | Working notes    | `memory/YYYY-MM-DD.md`            | Daily observations                        |
 
-Imported chat history is **read-only archive**: it is searchable but never
+Imported chat history is a **read-only archive**: it is searchable but never
 merged into `MEMORY.md` automatically. If a recurring, durable fact emerges from
 an import, promote it deliberately (see "Promotion").
 
@@ -37,19 +36,21 @@ an import, promote it deliberately (see "Promotion").
 
 ## How to capture (ingest)
 
-### Via the OpenClaw plugin
+### Standalone script runner
 
 ```bash
-openclaw second-brain import chatgpt  --from ~/Downloads/conversations.json
-openclaw second-brain import claude-ai --from ~/Downloads/claude-export/
-openclaw second-brain import gemini   --from ~/Downloads/Takeout/Gemini/
-openclaw second-brain list
-```
-
-### Via the standalone script (no OpenClaw build needed)
-
-```bash
+# Import individual sources
 node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json
+node scripts/second-brain-import.mjs import claude-ai --from ~/Downloads/claude-export/
+node scripts/second-brain-import.mjs import gemini --from ~/Downloads/Takeout/Gemini/
+
+# Preview without writing
+node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json --dry-run
+
+# Batch ingest all exports in an inbox directory
+node scripts/second-brain-import.mjs ingest --from ~/Downloads/ai-inbox/
+
+# List imported status
 node scripts/second-brain-import.mjs list
 ```
 
@@ -68,18 +69,8 @@ node scripts/second-brain-import.mjs list
 2. Secrets in the source text are redacted (`[redacted]`) before writing; report
    the redaction count to the operator.
 3. Never commit export files or the imported notes' raw secrets to Git. The
-   imports live in the agent workspace, not the repository.
+   imports live in the local agent workspace, not the repository.
 4. Use `--dry-run` first when the export is large or unfamiliar.
-
-## How to recall
-
-```bash
-openclaw memory search "website AI automation" --agent <id>
-openclaw memory get <path> --agent <id>
-```
-
-Inside a chat session, prefer the `memory_search` / `memory_get` tools. Cite the
-source (`chatgpt`, `claude-ai`, or `gemini`) when quoting recalled material.
 
 ## Promotion (episodic → curated)
 
@@ -93,23 +84,20 @@ operator-verified fact recurs across sources:
 
 ## Sharing memory with the other AIs (round-trip contract)
 
-ChatGPT, Claude, and Gemini cannot run OpenClaw directly, so they participate
-through shared Markdown:
+ChatGPT, Claude, and Gemini participate through shared Markdown:
 
 - **Hand-off to another AI**: give it the relevant `USER.md` + `MEMORY.md` +
   the matching `memory/imports/<source>/*.md` excerpt as context.
 - **Bring it back**: ask the other AI to summarize decisions, then export its
-  history and run the matching `second-brain import`.
+  history and run the matching `second-brain-import.mjs`.
 - Keep the curated `USER.md`/`MEMORY.md` the **single source of truth**; the
   other AIs read a copy, never the canonical files.
 
 ## Routing policy (who does what)
 
-Mirror the roles in `AGENTS.md` and let OpenClaw/Hermes route:
-
-- **OpenClaw / Hermes** — orchestrator and memory owner; runs imports, search,
+- **Hermes Agent** — orchestrator and memory owner; runs imports, search,
   and consolidation.
-- **ChatGPT** — strategy, planning, coordination.
+- **ChatGPT** — strategy, planning, coordination, marketing.
 - **Claude** — code, refactor, architecture.
 - **Gemini** — research, media, Colab/Python tasks.
 

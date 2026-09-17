@@ -1,34 +1,30 @@
-# Bộ nhớ thứ hai (Second Brain) — Quang Quý AI
+# Bộ nhớ thứ hai (Second Brain) — Quang Quý AI / Zeus
 
-Cập nhật: 2026-09-05
+Cập nhật: 2026-09-17
 
 ## 1. Mục tiêu
 
 Gom **tất cả thông tin đã trao đổi trên mạng** với các AI (ChatGPT, Claude.ai,
-Gemini, OpenClaw, Hermes) về **một kho ký ức duy nhất, tìm kiếm được**, không AI
-nào "quên" những gì đã bàn trước đó.
+Gemini, Hermes) về **một kho ký ức duy nhất, tìm kiếm được**, không AI nào "quên" những gì đã bàn trước đó.
 
-Thiết kế theo triết lý "mở rộng ở edge" trong `AGENTS.md`: không tạo cơ sở dữ
-liệu riêng, mà tận dụng hệ memory sẵn có của OpenClaw (file Markdown + index
-SQLite + `memory search`/`memory_get`).
+Thiết kế độc lập, nhẹ và linh hoạt: chạy bằng script Node.js standalone (`scripts/second-brain-import.mjs`), không cần cài đặt các framework cồng kềnh hay cấu trúc doanh nghiệp phức tạp.
 
 ## 2. Kiến trúc
 
 ```text
-ChatGPT export (conversations.json)
-Claude.ai export (conversations.json)  ──┐
-Gemini Takeout (JSON / Chat-*.html)   ──┤
-Hermes MEMORY.md/USER.md (có sẵn)     ──┤
-Codex / Claude Code (có sẵn)          ──┘
-        │
-        ▼  second-brain import (plugin + script standalone)
-memory/imports/chatgpt|claude-ai|gemini/*.md   ← ghi vào index, KHÔNG trộn vào MEMORY.md
+ChatGPT export (conversations.json)   ──┐
+Claude.ai export (conversations.json) ──┼──▶  scripts/second-brain-import.mjs
+Gemini Takeout (JSON / Chat-*.html)   ──┤     (tự động redact secrets, chuyển thành Markdown)
+Hermes MEMORY.md / USER.md            ──┘
         │
         ▼
-OpenClaw memory index (SQLite + semantic search)
+~/.hermes/memory/imports/chatgpt|claude-ai|gemini/*.md
         │
         ▼
-memory search / memory get  →  ChatGPT · Claude · OpenClaw · Hermes · Gemini
+Hermes memory search & recall
+        │
+        ▼
+Phối hợp đồng bộ: ChatGPT · Claude · Hermes · Gemini
 ```
 
 Ba tầng dữ liệu:
@@ -36,12 +32,10 @@ Ba tầng dữ liệu:
 | Tầng | Nơi lưu | Vai trò |
 | --- | --- | --- |
 | Lõi được chọn lọc | `MEMORY.md`, `USER.md` | Sự thật bền vững, nạp mỗi phiên |
-| Lưu trữ tình tiết | `memory/imports/<nguồn>/*.md` | Lịch sử chat nhập về, tìm theo yêu cầu |
+| Lưu trữ tình tiết | `~/.hermes/memory/imports/<nguồn>/*.md` | Lịch sử chat nhập về, tìm theo yêu cầu |
 | Ghi chú hằng ngày | `memory/YYYY-MM-DD.md` | Quan sát đang diễn ra |
 
-Lịch sử nhập về là **kho lưu trữ chỉ đọc**: tìm kiếm được, nhưng **không tự động
-trộn vào** `MEMORY.md` bootstrap. Khi một sự thật bền vững lặp lại nhiều nguồn,
-đưa nó vào `MEMORY.md` một cách có chủ đích (xem mục 6).
+Lịch sử nhập về là **kho lưu trữ chỉ đọc**: tìm kiếm được, nhưng **không tự động trộn vào** `MEMORY.md` bootstrap. Khi một sự thật bền vững lặp lại nhiều nguồn, đưa nó vào `MEMORY.md` một cách có chủ đích (xem mục 6).
 
 ## 3. Cách dùng
 
@@ -53,92 +47,55 @@ trộn vào** `MEMORY.md` bootstrap. Khi một sự thật bền vững lặp l�
 | Claude.ai | Settings → Data controls / **Export** → `conversations.json` (dạng zip, giải nén trước) |
 | Gemini | **Google Takeout** → chọn Gemini → tải về → thư mục `Gemini/` (JSON `conversations.json` ưu tiên; hỗ trợ cả `Chat-*.html` cũ) |
 
-### 3.2. Nhập qua plugin OpenClaw
+### 3.2. Nhập bằng script standalone
+
+Chạy được ngay trên Termux, VPS, Colab hoặc máy tính cá nhân bằng Node.js ≥ 22:
 
 ```bash
-openclaw second-brain import chatgpt  --from ~/Downloads/conversations.json
-openclaw second-brain import claude-ai --from ~/Downloads/claude-export/
-openclaw second-brain import gemini   --from ~/Downloads/Takeout/Gemini/
-openclaw second-brain import chatgpt  --from ... --dry-run   # xem trước
-openclaw second-brain list
-```
-
-### 3.3. Nhập bằng script standalone (không cần build OpenClaw)
-
-Chạy được ngay trên Termux/Colab bằng Node ≥ 22.18:
-
-```bash
+# Nhập từng nguồn
 node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json
 node scripts/second-brain-import.mjs import claude-ai --from ~/Downloads/claude-export/
 node scripts/second-brain-import.mjs import gemini --from ~/Downloads/Takeout/Gemini/
+
+# Xem trước không ghi file
+node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json --dry-run
+
+# Nhập toàn bộ từ một thư mục inbox chứa nhiều file export
+node scripts/second-brain-import.mjs ingest --from ~/Downloads/ai-inbox/
+
+# Xem danh sách nguồn đã nhập
 node scripts/second-brain-import.mjs list
 ```
 
-Mặc định ghi vào `~/.openclaw/workspace/memory/imports`; đổi bằng `--out <thư mục>`.
-
-### 3.4. Tìm kiếm
-
-```bash
-openclaw memory search "website AI automation"
-```
-
-Trong chat: dùng tool `memory_search` / `memory_get`; khi trích lại luôn nêu nguồn
-(`chatgpt`, `claude-ai`, `gemini`).
+Mặc định ghi vào `~/.hermes/memory/imports`; có thể đổi đường dẫn bằng tham số `--out <thư mục>` hoặc biến môi trường `SECOND_BRAIN_IMPORTS_DIR`.
 
 ## 4. Kết nối với các AI khác (hợp đồng bộ nhớ dùng chung)
 
-ChatGPT, Claude, Gemini không chạy được OpenClaw trực tiếp, nên tham gia qua
-Markdown dùng chung:
+ChatGPT, Claude, Gemini tham gia phối hợp qua các tài liệu Markdown dùng chung:
 
-- **Giao việc cho AI khác**: đưa `USER.md` + `MEMORY.md` + trích đoạn
-  `memory/imports/<nguồn>/*.md` liên quan làm ngữ cảnh.
-- **Đưa trở lại**: nhờ AI kia tóm tắt quyết định, rồi xuất lịch sử của nó và chạy
-  `second-brain import`.
+- **Giao việc cho AI khác**: đưa `USER.md` + `MEMORY.md` + trích đoạn `memory/imports/<nguồn>/*.md` liên quan làm ngữ cảnh.
+- **Đưa trở lại**: nhờ AI kia tóm tắt quyết định, rồi xuất lịch sử của nó và chạy `second-brain-import.mjs`.
 - `USER.md`/`MEMORY.md` là **nguồn duy nhất đúng**; các AI khác chỉ đọc bản sao.
 
 ### Điều phối đa model (routing)
 
-Theo vai trò đã định trong `AGENTS.md`, OpenClaw/Hermes làm điều phối:
-
 | AI | Vai trò |
 | --- | --- |
-| OpenClaw / Hermes | Điều phối, sở hữu bộ nhớ (import, tìm, tổng hợp) |
-| ChatGPT | Chiến lược, kế hoạch, phối hợp |
-| Claude | Code, refactor, kiến trúc |
-| Gemini | Nghiên cứu, media, Colab/Python |
-
-Việc nào đưa AI nào theo loại công việc và độ khó; **kết quả luôn ghi về bộ nhớ
-chung** để AI kế tiếp bắt đầu từ ký ức, không phải từ số không.
+| Hermes Agent | Điều phối, sở hữu bộ nhớ (import, tìm, tổng hợp) |
+| ChatGPT | Chiến lược, kế hoạch, nội dung tiếp thị |
+| Claude | Lập trình chuyên sâu, refactor mã nguồn |
+| Gemini | Nghiên cứu tài liệu, media, tác vụ Colab/Python |
 
 ## 5. Bảo mật
 
-- Bộ import **tự động redact** secret thường gặp (API key `sk-…`, token
-  `ghp_…`/`xox…`, JWT, `password=…`) thành `[redacted]` trước khi ghi; số lượng
-  redaction được báo trong report.
-- Không commit file xuất hoặc nội dung nhập chứa secret lên GitHub.
-- File nhập nằm trong workspace của agent (`HERMES_HOME`/`~/.openclaw`), không nằm
-  trong repository.
-- Nhập là idempotent; `--overwrite` chỉ khi thực sự cần (ghi đè file hiện có).
+- Bộ import **tự động redact** secret thường gặp (API key `sk-...`, Google `AIza...`, token `ghp_...`/`xox...`, JWT, `password=...`) thành `[redacted]` trước khi ghi.
+- Không commit file xuất hoặc nội dung chat cá nhân lên GitHub public.
+- File nhập nằm trong thư mục local của agent (`HERMES_HOME`), không nằm trong repository Git.
+- Quá trình nhập là idempotent (chạy lại không trùng lặp file); dùng `--overwrite` nếu muốn ghi đè.
 
 ## 6. Tổng hợp từ tình tiết lên lõi
 
 Khi một sự thật bền vững lặp lại nhiều nguồn:
-
-1. Viết nháp sự thật dưới dạng chỉ thị ngắn.
-2. Xác nhận với Quang Quý (nội dung nhập có provenance bên ngoài).
-3. Ghi vào `MEMORY.md` (hoặc `USER.md` cho sở thích cá nhân), supersede tại chỗ
-   thay vì ghi thêm dòng mâu thuẫn.
-
-## 7. Tình trạng & bước tiếp theo
-
-- [x] Importer ChatGPT / Claude.ai / Gemini (plugin + script standalone).
-- [x] Bộ test normalizer + import (Node test runner).
-- [ ] Tích hợp nút "Import Memory" trong Control UI cho các nguồn web (hiện UI hỗ
-  trợ Codex/Claude Code/Hermes qua `openclaw migrate`).
-- [ ] Tự động tải export định kỳ (Google Takeout scheduled export / ChatGPT
-  scheduled export) và import vào cron.
-- [ ] Cấu hình routing đa model thành file policy để Hermes điều phối tự động.
-- [ ] Đồng bộ kho `memory/imports` lên Drive (bản sao, mã hoá) khi cần đa thiết bị.
-
-Xem thêm: [SKILL](/skills/second-brain/SKILL.md), kiến trúc memory trong
-`core/docs/concepts/memory-architecture.md`.
+1. Viết nháp sự thật dưới dạng chỉ thị ngắn gọn.
+2. Xác nhận thông tin quan trọng.
+3. Ghi vào `MEMORY.md` (hoặc `USER.md` cho sở thích cá nhân).

@@ -1,47 +1,33 @@
-# TODO — Quang Quý AI
+# TODO — Zeus / Quang Quý AI
 
-Cập nhật: 2026-08-06
+Cập nhật: 2026-09-17
 
-## P0 — phải hoàn tất trước khi gọi là chạy nền 24/7
+## P0 — Đã hoàn thành (Core & Automation)
 
-- [x] Xác minh `hermes_cli` được cài editable trong `~/hermes-env`.
-- [x] Xác minh `python -m hermes_cli.main` và console script `hermes` chạy ngoài repository mà không cần `PYTHONPATH`.
-- [x] Chuẩn hóa tmux supervisor `~/bin/start-hermes-background.sh` với restart delay 15 giây.
-- [x] Chuẩn hóa `~/.termux/boot/01-hermes`, wake lock và delay 30 giây.
-- [x] Loại boot script trùng khỏi thư mục được Termux:Boot thực thi.
-- [x] Kiểm thử cold-start: xóa session rồi tạo lại thành công bằng boot script.
-- [ ] Cài ứng dụng Android Termux:Boot từ cùng nguồn với Termux, mở ứng dụng một lần và bỏ tối ưu pin cho Termux/Termux:Boot.
-- [ ] Reboot Android thật; kiểm tra `~/.hermes/logs/hermes-boot.log`, tmux session `hermes` và process `python -m hermes_cli.main`.
-- [ ] Xử lý 12 cảnh báo `npm audit` (1 critical, 10 high, 1 low) trên nhánh riêng; chạy build/test trước khi merge.
-- [ ] Chạy test suite Hermes trong Linux CI/VPS; test harness subprocess hiện gặp `PermissionError` trên Android/Termux.
-- [ ] Nâng root CI để chạy full Hermes pytest, lint/typecheck, UI build, lockfile check và OSV scan; workflow lồng trong `agents/hermes/.github/` không tự chạy.
+- [x] Tinh gọn repository, loại bỏ monorepo/openclaw cồng kềnh, chuyển hướng quản lý sang mô hình cá nhân gọn nhẹ `ZeusopenAI/ZEUS`.
+- [x] Tích hợp workflow GitHub Actions chạy Hermes Agent qua OpenRouter (`.github/workflows/hermes-openrouter.yml`).
+- [x] Tích hợp workflow tự động mở PR khi code được đẩy từ Arena (`.github/workflows/arena-auto-pr.yml`).
+- [x] Xây dựng công cụ độc lập Second Brain Importer (`scripts/second-brain-import.mjs` + `scripts/second-brain/`) kèm bộ test 20/20 PASS.
+- [x] Triển khai Cloudflare Worker Proxy cho Telegram Webhook (`worker/telegram-proxy/`) và viết runbook xử lý lỗi xung đột 409 (`docs/TELEGRAM_WIRING.md`).
+- [x] Xây dựng kỹ năng `qai-developer-manager` và `second-brain` trong `skills/`.
+- [x] Viết script đồng bộ code sang `ZeusopenAI/ZEUS` (`scripts/sync-to-zeusopenai.sh`).
 
-## P1 — tích hợp vận hành
+## P1 — Vận hành & Cấu hình dịch vụ ngoài
 
-- [x] Extension OpenClaw `second-brain`: nhập lịch sử ChatGPT / Claude.ai / Gemini vào `memory/imports/*` (kèm test + script standalone `scripts/second-brain-import.mjs` với `import`/`ingest`/`list`). Runbook: `docs/second-brain.md`.
-- [ ] Đăng nhập `gh auth login`; bật branch protection và required CI trên `main`.
-- [x] Tạo backup tag và migration branch; thay snapshot Hermes bằng subtree không squash để giữ một repository và bảo toàn lịch sử.
-- [ ] Đồng bộ technical fork với `NousResearch/hermes-agent` theo batch có review/test; dọn branch refs sau khi xác minh không còn active work.
-- [ ] Tạo đúng bộ icon 32/128/256 cho Tauri installer và thêm/check `Cargo.lock` theo policy build application.
-- [ ] Tạo Telegram bot, lưu token ngoài Git, cấu hình Hermes Gateway và kiểm thử hai chiều.
-- [ ] Cấu hình Claude/Anthropic và Gemini dưới dạng model provider/fallback; không đưa key vào `config.yaml`.
-- [ ] Cấu hình Notion integration, chỉ share các page cần thiết.
-- [ ] Cấu hình Google Workspace OAuth cho Drive/Docs với scope tối thiểu.
-- [ ] Kết nối Make bằng webhook có chữ ký hoặc token riêng, giới hạn từng scenario.
-- [ ] Cấu hình Hugging Face token loại read-only; chỉ cấp write khi có workflow xuất bản model cụ thể.
-- [ ] Thiết lập health check, cảnh báo lỗi và backup có kiểm thử khôi phục.
+- [ ] Đồng bộ toàn bộ branch này sang `ZeusopenAI/ZEUS` bằng `scripts/sync-to-zeusopenai.sh`.
+- [ ] Thêm secret `OPENROUTER_API_KEY` vào GitHub Repository Secrets của `ZeusopenAI/ZEUS` để chạy Actions.
+- [ ] Deploy Cloudflare Worker `zeus-telegram-proxy` và nạp `WEBHOOK_SECRET` + `UPSTREAM_URL`.
+- [ ] Cấu hình bot Telegram mới từ @BotFather và nối vào Hermes Gateway.
+- [ ] Nhập file lịch sử chat gần nhất từ ChatGPT / Claude / Gemini vào Second Brain (`node scripts/second-brain-import.mjs ingest --from ...`).
 
-## P2 — production
+## P2 — Mở rộng & Tự động hóa nâng cao
 
-- [ ] Tích hợp các nguồn web (ChatGPT/Claude.ai/Gemini) vào Control UI "Import Memory" (hiện UI chỉ hỗ trợ Codex/Claude Code/Hermes qua `openclaw migrate`).
-- [ ] Lập lịch tự động tải export (Google Takeout scheduled export, ChatGPT scheduled export) và import vào cron.
-- [ ] Viết policy điều phối đa model để Hermes tự động giao việc (ChatGPT chiến lược, Claude code, Gemini nghiên cứu) và ghi kết quả về bộ nhớ chung.
-- [ ] Chuyển tiến trình 24/7 sang VPS Ubuntu; giữ Android/Termux làm control plane dự phòng.
-- [ ] Chạy Hermes Gateway dưới service manager, auto-restart và log rotation.
-- [ ] Thêm staging trước production; deploy qua pull request và approval.
-- [ ] Chọn secret manager cho production; lập lịch rotation và quy trình thu hồi.
-- [ ] Theo dõi chi phí model/API, giới hạn ngân sách và rate limit.
+- [ ] Lập lịch tải export định kỳ từ Google Takeout / ChatGPT để nạp tự động vào Second Brain.
+- [ ] Thiết lập quy tắc điều phối đa model (Multi-Model Routing) trong prompt hệ thống của Hermes.
+- [ ] Chạy Hermes Gateway 24/7 trên VPS Ubuntu (hoặc Termux dự phòng).
+- [ ] Tích hợp Google Colab notebook với Google Drive để lưu ảnh/video sinh ra từ ComfyUI.
+- [ ] Theo dõi chi phí model qua dashboard OpenRouter và thiết lập giới hạn ngân sách hàng tháng.
 
 ## Quy tắc hoàn thành
 
-Một mục chỉ được đánh dấu xong khi có lệnh kiểm tra, log hoặc CI run chứng minh. Không commit credential, không deploy thẳng từ `main`, không tự động hóa hành động phát sinh chi phí hoặc công khai dữ liệu nếu chưa có approval.
+Một mục chỉ được đánh dấu xong khi có kết quả thực tế hoặc lệnh kiểm tra chứng minh. Tuyệt đối không commit credential, không tự động hóa hành động phát sinh chi phí mà không có xác nhận của người quản trị.
