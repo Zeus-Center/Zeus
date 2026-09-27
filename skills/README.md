@@ -14,12 +14,6 @@ This directory contains reusable, domain-specific skills for the Zeus / Hermes A
 - Android / Termux / Colab environment validation
 - Ensuring test coverage, CI verification, and safe rollback mechanisms
 
-**Key responsibilities**:
-- Evidence before edits: reproduce or isolate issues first
-- Smallest reversible patches
-- Zero secret exposure
-- Full test and validation verification before declaring done
-
 Full guide: [skills/qai-developer-manager/SKILL.md](qai-developer-manager/SKILL.md)
 
 ---
@@ -48,17 +42,21 @@ Full guide: [skills/hermes-project-analyst-code-manager/SKILL.md](hermes-project
 - Handing shared memory (`USER.md` / `MEMORY.md`) to external AIs so they continue threads seamlessly.
 - Multi-model routing (ChatGPT: strategy, Claude: code, Gemini: research).
 
-**Commands**:
-```bash
-# Standalone importer (Node.js >= 22)
-node scripts/second-brain-import.mjs import chatgpt --from ~/Downloads/conversations.json
-node scripts/second-brain-import.mjs import claude-ai --from ~/Downloads/claude-export/
-node scripts/second-brain-import.mjs import gemini --from ~/Downloads/Takeout/Gemini/
-node scripts/second-brain-import.mjs ingest --from ~/Downloads/ai-inbox/
-node scripts/second-brain-import.mjs list
-```
-
 Full guide: [docs/second-brain.md](../docs/second-brain.md) & [skills/second-brain/SKILL.md](second-brain/SKILL.md)
+
+---
+
+### 4. flowkit-ai-filmmaker
+
+**Purpose**: Automated AI filmmaking and video production pipeline using Google Flow / Veo, Gemini AI planning, reference image consistency, TTS narration, and FFmpeg post-processing.
+
+**When to use**:
+- End-to-end automated video creation (Shorts, Reels, YouTube 16:9, commercial videos).
+- Ensuring 100% character and location consistency via Reference Image System.
+- Smooth scene transitions via frame chaining (`/fk-gen-chain-videos`).
+- Multi-model video orchestration (Gemini kịch bản/TTS + Google Flow video + FFmpeg ghép video).
+
+Full guide: [skills/flowkit-ai-filmmaker/SKILL.md](flowkit-ai-filmmaker/SKILL.md) & [memory/flowkit-ai-filmmaking.md](../memory/flowkit-ai-filmmaking.md)
 
 ---
 
