@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.ZeusKeyboard" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/zeus_primary</item>
+        <item name="colorPrimaryDark">@color/zeus_primary_dark</item>
+        <item name="colorAccent">@color/zeus_accent</item>
+        <item name="android:windowBackground">@color/zeus_background</item>
+        <item name="android:statusBarColor">@color/zeus_background</item>
+        <item name="android:navigationBarColor">@color/zeus_background</item>
+    </style>
+</resources>

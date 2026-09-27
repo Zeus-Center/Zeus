@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#1A1A2E"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingBottom="32dp">
+
+        <!-- Header -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="⚡ Zeus AI Keyboard"
+            android:textSize="28sp"
+            android:textColor="#E0E0E0"
+            android:textStyle="bold"
+            android:gravity="center"
+            android:paddingTop="24dp"
+            android:paddingBottom="8dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bàn phím AI thông minh • Hỗ trợ tiếng Việt"
+            android:textSize="14sp"
+            android:textColor="#888888"
+            android:gravity="center"
+            android:paddingBottom="24dp" />
+
+        <!-- Status -->
+        <TextView
+            android:id="@+id/text_status"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Đang kiểm tra..."
+            android:textSize="14sp"
+            android:textColor="#FF9800"
+            android:background="#222244"
+            android:padding="16dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Step 1: Enable Keyboard -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bước 1: Bật bàn phím"
+            android:textSize="16sp"
+            android:textColor="#E0E0E0"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_enable_keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bật Zeus AI Keyboard"
+            android:backgroundTint="#7B2FBE"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Step 2: Select Keyboard -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Bước 2: Chọn bàn phím"
+            android:textSize="16sp"
+            android:textColor="#E0E0E0"
+            android:textStyle="bold"
+            android:paddingTop="16dp"
+            android:paddingBottom="8dp" />
+
+        <Button
+            android:id="@+id/btn_select_keyboard"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Chọn Zeus AI Keyboard"
+            android:backgroundTint="#7B2FBE"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="24dp" />
+
+        <!-- AI Configuration -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Cấu hình AI (không bắt buộc)"
+            android:textSize="16sp"
+            android:textColor="#E0E0E0"
+            android:textStyle="bold"
+            android:paddingBottom="16dp" />
+
+        <!-- API URL -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API Endpoint"
+            android:textSize="12sp"
+            android:textColor="#AAAAAA" />
+
+        <EditText
+            android:id="@+id/edit_api_url"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="https://openrouter.ai/api/v1/chat/completions"
+            android:textColor="#E0E0E0"
+            android:textColorHint="#555555"
+            android:background="#222244"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:inputType="textUri"
+            android:singleLine="true" />
+
+        <!-- API Key -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="API Key"
+            android:textSize="12sp"
+            android:textColor="#AAAAAA" />
+
+        <EditText
+            android:id="@+id/edit_api_key"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="sk-or-... (OpenRouter key)"
+            android:textColor="#E0E0E0"
+            android:textColorHint="#555555"
+            android:background="#222244"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp"
+            android:inputType="textPassword"
+            android:singleLine="true" />
+
+        <!-- Model -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="AI Model"
+            android:textSize="12sp"
+            android:textColor="#AAAAAA" />
+
+        <EditText
+            android:id="@+id/edit_model"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="openai/gpt-4o-mini"
+            android:textColor="#E0E0E0"
+            android:textColorHint="#555555"
+            android:background="#222244"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:inputType="text"
+            android:singleLine="true" />
+
+        <!-- Vietnamese Settings -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Tiếng Việt"
+            android:textSize="16sp"
+            android:textColor="#E0E0E0"
+            android:textStyle="bold"
+            android:paddingBottom="8dp" />
+
+        <Switch
+            android:id="@+id/switch_telex"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Gõ Telex (aa→â, dd→đ, uw→ư, s/f/r/x/j → dấu)"
+            android:textColor="#E0E0E0"
+            android:textSize="14sp"
+            android:padding="8dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- Save Button -->
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="💾 Lưu cài đặt"
+            android:backgroundTint="#4CAF50"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+
+        <!-- Footer -->
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Zeus AI Keyboard v1.0.0\n© 2026 Nguyễn Quang Quý • ZeusopenAI"
+            android:textSize="12sp"
+            android:textColor="#555555"
+            android:gravity="center"
+            android:paddingTop="32dp" />
+
+    </LinearLayout>
+
+</ScrollView>
