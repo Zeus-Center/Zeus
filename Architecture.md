@@ -1,100 +1,80 @@
-# Architecture — Quang Quý AI
+# Architecture — Zeus / Quang Quý AI
 
-Cập nhật: 2026-08-06
+Cập nhật: 2026-09-17
 
 ## 1. Vai trò hệ thống
 
-Hermes Agent là AI Manager và orchestration runtime. Nó không thay thế GitHub, Notion, Drive hoặc Make; nó điều phối các hệ thống đó qua provider, skill, plugin, CLI hoặc API có scope rõ ràng.
+Zeus (ZeusopenAI) là hệ thống AI Automation cá nhân và điều phối tác vụ cho thương hiệu **Nguyễn Quang Quý**. Hệ thống sử dụng Hermes Agent làm bộ não điều phối, kết hợp với các dịch vụ đám mây (GitHub Actions, Cloudflare Workers, Google Colab, Google Drive) để vận hành mọi lúc mọi nơi từ điện thoại.
 
 ## 2. Kiến trúc logic
 
 ```text
-Người dùng
-  ├─ Telegram (kênh vận hành chính)
-  ├─ CLI/TUI Termux (quản trị và dự phòng)
-  └─ Web/Desktop (tùy chọn)
+Người dùng (Điện thoại / Trình duyệt)
+  ├─ Telegram (kênh tương tác chính)
+  ├─ GitHub Actions (chạy tác vụ theo nhu cầu qua OpenRouter)
+  └─ Google Colab (chạy tác vụ nặng: ComfyUI, Model xử lý ảnh/video)
           │
           ▼
-Hermes Gateway / Session Router
+Cloudflare Worker Proxy (worker/telegram-proxy)
           │
           ▼
-Hermes AI Manager
-  ├─ Model routing
-  │    ├─ OpenAI Codex / ChatGPT (đang hoạt động)
-  │    ├─ Claude / Anthropic (kế hoạch)
-  │    └─ Gemini (kế hoạch)
-  ├─ Skills và tools
-  │    ├─ GitHub (`git`, `gh`)
-  │    ├─ Notion
-  │    ├─ Google Workspace / Drive
-  │    ├─ Hugging Face
-  │    └─ Terminal/file/browser
-  ├─ Plugins/adapters
-  │    ├─ Telegram
-  │    └─ Make webhook/API
-  ├─ Memory, sessions, cron và kanban
-  └─ Approval/policy boundary
-          │
-          ▼
-Dịch vụ ngoài: GitHub · Notion · Drive · Make · Hugging Face
+Hermes Gateway / Agent Runtime (agents/hermes)
+  ├─ Multi-Model Routing
+  │    ├─ OpenRouter / ChatGPT (chiến lược, code, tạo ảnh)
+  │    ├─ Claude / Anthropic (lập trình chuyên sâu, refactor)
+  │    └─ Google Gemini (nghiên cứu, phân tích, xử lý media)
+  ├─ Bộ nhớ thứ hai (Second Brain)
+  │    ├─ Import ChatGPT / Claude / Gemini exports
+  │    └─ Memory recall & durable facts
+  ├─ Skills & Tools
+  │    ├─ QAI Developer Manager
+  │    ├─ Hermes Project Analyst
+  │    └─ Terminal / Git / Web search
+  └─ Output Artifacts & Git Sync
 ```
 
-## 3. Kiến trúc triển khai
-
-### Hiện tại — Android/Termux
+## 3. Kiến trúc triển khai Cloud-First
 
 ```text
-Android boot
-  → Termux:Boot (chưa cài)
-  → ~/.termux/boot/01-hermes
-  → wake lock + delay 30s
-  → ~/bin/start-hermes-background.sh
-  → tmux session `hermes`
-  → ~/hermes-env/bin/python -m hermes_cli.main
-  → restart sau 15s nếu process thoát
++-----------------------+      +---------------------------+
+|    GitHub Actions     |      |    Cloudflare Worker      |
+|  (Hermes Task Runner) |      | (Telegram Webhook Proxy)  |
++-----------------------+      +---------------------------+
+            |                                |
+            |                                v
+            |                  +---------------------------+
+            +----------------->|    Hermes Agent Runtime   |
+                               |  (Termux / VPS / Cloud)   |
+                               +---------------------------+
+                                             |
+                                             v
+                               +---------------------------+
+                               |     Google Colab / GPU    |
+                               |    (ComfyUI / Heavy AI)   |
+                               +---------------------------+
 ```
 
-Termux phù hợp cho development, quản trị di động và fallback. Android có thể dừng ứng dụng do battery policy; vì vậy không được coi là production HA.
+1. **GitHub Actions:** Chạy các tác vụ một lần (one-shot), viết code, tạo ảnh qua OpenRouter API. Hoàn toàn miễn phí trên repo public.
+2. **Cloudflare Worker:** Làm lớp đệm proxy an toàn cho Telegram Webhook, không lưu key, chuyển tiếp trực tiếp về Hermes Gateway.
+3. **Google Colab:** Môi trường GPU tạm thời để chạy ComfyUI tạo ảnh/video chất lượng cao.
+4. **Second Brain:** Module độc lập trích xuất lịch sử các AI bên ngoài về định dạng Markdown.
 
-### Mục tiêu — VPS
+## 4. Ranh giới dữ liệu & Bảo mật
 
-- VPS chạy Hermes Gateway 24/7 dưới service manager.
-- Android là thiết bị điều khiển qua Telegram/SSH/VPN, không phải single point of failure.
-- GitHub là source of truth và CI/CD control plane.
-- Runtime state, secrets và backup tách khỏi Git repository.
+- **GitHub Repository (`ZeusopenAI/ZEUS`):** Lưu mã nguồn, workflow, tài liệu, script. Tuyệt đối KHÔNG lưu secret hay file `.env`.
+- **GitHub Secrets:** Lưu `OPENROUTER_API_KEY` và các credential phục vụ CI/Actions.
+- **`~/.hermes/` (Local runtime):** Lưu config cục bộ, session, memory imports và logs (phân quyền mode 600/700).
+- **Cloudflare Worker Secrets:** Lưu `WEBHOOK_SECRET` và `UPSTREAM_URL`.
 
-## 4. Ranh giới dữ liệu
-
-- GitHub: code, tài liệu kỹ thuật, workflow, placeholder config.
-- `HERMES_HOME`: config runtime, OAuth state, session/memory và log; permission riêng tư.
-- Secret manager/GitHub Secrets: production credentials.
-- Notion: knowledge/project pages, không lưu API key.
-- Drive: tài liệu lớn, media và backup encrypted.
-- Make: connection vault và scenario-level credentials.
-
-## 5. Nguyên tắc tích hợp
-
-1. Mở rộng ở edge: ưu tiên config → skill/CLI → plugin/MCP; tránh thêm core tool.
-2. Least privilege: mỗi integration có credential riêng và scope nhỏ nhất.
-3. Human-in-the-loop: deploy production, gửi dữ liệu, đăng công khai, xóa hoặc phát sinh chi phí cần approval.
-4. Idempotency: webhook/job có idempotency key và giới hạn retry.
-5. Observability: correlation ID, structured log, health check và budget alert.
-6. Cache safety: không đổi system prompt/toolsets giữa một conversation đang chạy.
-
-## 6. Repository layout đích
+## 5. Cấu trúc thư mục (Layout chuẩn)
 
 ```text
-quangquy-ai/
-  apps/                  # sản phẩm/landing page
-  services/              # API và service riêng của Quang Quý
-  integrations/          # adapter riêng (khi phát sinh)
-  automations/          # Make/n8n specs và webhook contracts, không chứa secret
-  config/hermes/         # overlay/config không chứa secret
-  deploy/                # VPS/container manifests
-  agents/hermes/        # history-preserving subtree của Hermes
-  docs/                 # runbook, audit, ADR
-  scripts/              # update/validate/deploy scripts
-  .github/workflows/    # CI/CD đã pin SHA
+ZEUS/
+  .github/workflows/    # Workflows tự động hóa Actions
+  agents/hermes/        # Runtime Hermes AI Agent
+  colab/                # Script khởi động trên Google Colab
+  docs/                 # Runbook, tài liệu kiến trúc & hướng dẫn
+  scripts/              # Bộ công cụ second-brain, hotfix, sync script
+  skills/               # Các kỹ năng tùy biến cho Agent
+  worker/               # Cloudflare Worker proxy cho Telegram
 ```
-
-`agents/hermes/` được hợp nhất bằng subtree không squash, nên lịch sử và attribution của `hermes-agent` có thể truy vết trong repository Quang Quy AI duy nhất. Các cập nhật sau phải dùng `scripts/update-hermes-subtree.sh` trên nhánh riêng. Không tạo fork tùy biến sâu nếu có thể giải bằng skill/plugin/config; điều này giữ đường cập nhật upstream đơn giản.

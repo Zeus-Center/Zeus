@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SOURCE_REPO="${HERMES_SOURCE_REPO:-https://github.com/qquy28888-ops/hermes-agent.git}"
+SOURCE_REPO="${HERMES_SOURCE_REPO:-https://github.com/NousResearch/hermes-agent.git}"
 SOURCE_REF="${1:-${HERMES_SOURCE_REF:-main}}"
 TARGET_DIR="agents/hermes"
 MARKER="$TARGET_DIR/.quang-quy-source-commit"
